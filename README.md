@@ -15,3 +15,7 @@ rojo serve
 ```
 
 For more help, check out [the Rojo documentation](https://rojo.space/docs).
+
+## Game design
+
+Start with the [SDD overview](docs/SDD.md) or browse the [feature specifications](specs/README.md).
