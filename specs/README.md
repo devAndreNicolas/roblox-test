@@ -6,6 +6,11 @@ This folder contains the behavior contracts for the Roblox Bingo project. Projec
 
 Use a zero-padded number and short feature name, for example `001-bingo-match/`. Each accepted feature should have one canonical set of artifacts:
 
+Current feature folders:
+
+- `001-bingo-match/` — implemented prototype; Studio verification checklist remains open.
+- [002-ui-improvements](002-ui-improvements/spec.md) — revised proposal covering UI, audited bug fixes, and feature refactoring; includes a technical plan, traceable tasks, and a validation matrix.
+
 ```text
 specs/
 ├── README.md
@@ -13,7 +18,7 @@ specs/
     ├── spec.md          # player-visible behavior and acceptance scenarios
     ├── plan.md          # architecture and implementation decisions
     ├── tasks.md         # implementation and verification checklist
-    ├── validation.md    # product question and playtest method, when needed
+    ├── validation.md    # acceptance, regression, or product playtest checks
     └── research/        # source feedback and observations, when available
 ```
 
