@@ -1,76 +1,67 @@
 # Bingo Match Technical Design
 
-**Status:** Draft  
-**Behavior source:** [Match specification](spec.md)  
+**Status:** Draft, updated with the onboarding implementation
+**Behavior source:** [Match specification](spec.md) · [Onboarding and call pacing](onboarding-and-call-pacing.spec.md)
 **Product test:** [MVP plan](../../docs/MVP.md)
 
 ## Runtime ownership
 
-- The server owns lobby state, countdowns, participant snapshots, card generation, the call sequence, called values, marks, and winner/draw outcome.
-- The client renders the server state and sends mark intent. It never decides whether a mark is valid or who won.
-- Shared configuration holds tunable minimum players, countdown durations, and call interval. The one-player development override must be Studio-only.
+- The server owns portal enrollment, queue state, countdowns, participant snapshots, card generation, the call sequence, called values, marks, and winner/draw outcome.
+- The client renders snapshots and sends mark/skip intent. It never decides whether a mark is valid or who won. Camera movement and the card reveal are local presentation.
+- Shared configuration holds the published minimum, Studio-only solo override, countdown, intro/kickoff, call cadence, and result duration.
+- The server creates the simple lobby set, queue portal, and Bingo MC NPC at runtime. The portal's `ProximityPrompt` is range-checked and rate-limited on the server.
 
-## Suggested project mapping
-
-Use the existing Rojo split and keep the first implementation small:
+## Project mapping
 
 ```text
 src/shared/
-  GameConfig.luau             -- shared tunables and shared data types
+  GameConfig.luau
 src/server/
-  init.server.luau            -- startup/composition root
-  services/RoundService.luau  -- lobby + match state and authoritative rules
+  init.server.luau
+  Services/
+    RoundService.luau             -- authoritative queue + match loop
+    LobbyWorldService.luau        -- lobby, portal, MC NPC and staging
 src/client/
-  init.client.luau             -- startup/composition root
-  controllers/BingoController.luau -- lobby, card, calls, results, mark intent
+  init.client.luau
+  Controllers/
+    BingoController.luau          -- lobby/card UI, captions, cutscene camera
 ReplicatedStorage/Remotes
-  RoundUpdate (server -> clients)
+  RoundUpdate (server -> client)
   MarkCell (client -> server)
   RequestSnapshot (client -> server, rate-limited)
+  SkipScene (client -> server, validated match id + participant membership)
 ```
-
-Exact Rojo mappings may need a small adjustment to `default.project.json`; do not move unrelated project files as part of this feature.
 
 ## State model
 
 ```text
-LobbyWaiting -> LobbyCountdown -> CallingNumbers -> RoundComplete
-      ^                |                                  |
-      |                +-- player count < 2 --------------+
-      +---------------------------------------------------+
+LobbyWaiting -> LobbyCountdown -> MatchIntro -> CallingNumbers -> RoundComplete
+      ^                |              |                |                |
+      |                +-- queue too small             |                |
+      +------------------------------------------------+----------------+
 ```
 
-`LobbyWaiting` and `LobbyCountdown` track waiting players. When the countdown ends, snapshot participants and initialize their cards. During `CallingNumbers`, only that snapshot participates. `RoundComplete` freezes the result, then returns remaining players to the lobby. An empty server remains in `LobbyWaiting`.
+Players spawn in the lobby and explicitly toggle queue membership at the portal. The server locks and removes queued players from the waiting set when the countdown ends. Those players get a card and move to the match area. New or unqueued players remain in the lobby; they can join the next queue while a match runs.
+
+`MatchIntro` lasts up to eight seconds if any participant has not yet played in this server session, otherwise three seconds. A player can locally skip the camera scene; the server shortens the shared intro once every participant has skipped. The first-call UI still repeats the simple instructions. During `CallingNumbers`, the server announces the first number immediately, then starts the five-second interval. `RoundComplete` freezes the result, presents the MC result scene, returns participants to the lobby after eight seconds, and starts another countdown only if enough players joined the queue.
 
 ## State and events
 
-The authoritative server state should be ordinary Luau tables scoped to the current server session. Keep a called-number lookup set for mark validation and an ordered call list for display/history. Store each player's card and marked cells on the server.
+The authoritative server state is stored in ordinary Luau tables for this server session. It keeps a queue membership set, participant cards, called-number lookup set, and ordered call list. First-match tutorial completion is session-local and is removed when the player leaves.
 
-The client requests an initial snapshot after connecting its `RoundUpdate` listener. This avoids losing the server's `PlayerAdded` snapshot if the LocalScript starts later. Rate-limit snapshot requests on the server.
+The client requests a snapshot after connecting its update listener. Snapshots include queue membership, phase/countdown, match id, card, calls, result, and whether the player needs the full tutorial. Updates are sent each second during countdowns, cutscenes, calls, and results so the UI can render countdowns and progress.
 
-The client needs:
-
-- A complete lobby or match snapshot on joining/rejoining UI state.
-- Lobby count/status/countdown updates.
-- On match start, the local player's card and participant-facing match state.
-- Each new call and a list or sequence for recent call history.
-- Accepted/rejected mark feedback and authoritative card updates.
-- Winner/draw and result countdown.
-
-Use a server-to-client event for snapshots and updates, and a client-to-server event for mark intent. Prefer an explicit cell index or row/column pair; never accept client-supplied number values, cards, or winner claims. Validate types, index bounds, participant membership, phase, called membership, and request frequency on the server.
-
-## Card generation and win check
-
-Build each column by sampling five distinct values from its configured range, then arrange into a 5×5 card. Reserve the center N cell as free and marked. Keep the server copy as authority; the client gets a rendering snapshot. A full-card check should inspect all non-free cells after each newly accepted mark.
+The client sends a cell index and match id for marks; it never sends card values or a claimed result. The server validates type, finite values, bounds, phase, participant membership, called membership, and request frequency. The skip request only affects the intro for a current participant in the matching match id.
 
 ## Failure handling
 
-- Countdown task must be cancellable or guarded by a countdown generation/token so a cancelled countdown cannot start a match later.
-- A leaving player is removed from the waiting set and current match map. A leave during countdown can cancel it if fewer than two remain.
-- Reject stale mark requests after state transitions; do not let a client replay a previous match's request into a new match. Include a round identifier in updates and mark requests.
-- If a client misses an update, provide a fresh snapshot on request/rejoin or when the UI initializes.
+- Countdown and intro tasks are guarded by generation or match identifiers so an old task cannot start a later round.
+- A leaving player is removed from queue and participant maps; a countdown cancels if the queue drops below the minimum.
+- If every participant leaves during intro or play, the match is cancelled and remaining queued players can start a fresh countdown.
+- The server range-checks and rate-limits portal interactions; it ignores malformed and stale skip/mark requests.
+- If a client misses an update, it can request a fresh snapshot when its UI initializes.
 - No persistence or recovery across server shutdown is needed for this MVP.
 
 ## Studio override
 
-The published behavior stays at a two-player minimum. Keep solo-start behavior behind a Studio check or a development-only config path that cannot be toggled by clients. The exact mechanism should be confirmed against the current Roblox project setup during implementation.
+Published servers require two queued players. `RunService:IsStudio()` gates the one-player development override so clients cannot enable it.

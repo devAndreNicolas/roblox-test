@@ -6,6 +6,8 @@
 ----- Services -----
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 ----- Types -----
 type CardCell = {
@@ -31,6 +33,8 @@ type Snapshot = {
 	lastCalledNumber: number?,
 	card: { CardCell }?,
 	isParticipant: boolean,
+	isQueued: boolean,
+	isFirstMatch: boolean,
 	result: MatchResult?,
 	notice: string?,
 }
@@ -55,6 +59,7 @@ local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local roundUpdateRemote = remotes:WaitForChild("RoundUpdate") :: RemoteEvent
 local markCellRemote = remotes:WaitForChild("MarkCell") :: RemoteEvent
 local requestSnapshotRemote = remotes:WaitForChild("RequestSnapshot") :: RemoteEvent
+local skipSceneRemote = remotes:WaitForChild("SkipScene") :: RemoteEvent
 
 ----- UI Helpers -----
 local function addCorner(parent: GuiObject, radius: number): UICorner
@@ -136,7 +141,7 @@ screenGui.IgnoreGuiInset = false
 screenGui.DisplayOrder = 10
 screenGui.Parent = playerGui
 
-local root = makeFrame("Background", screenGui, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), COLORS.background)
+local root = makeFrame("Background", screenGui, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), COLORS.background, 1)
 
 local header = makeFrame("Header", root, UDim2.fromScale(0, 0), UDim2.new(1, 0, 0, 60), COLORS.background)
 local titleLabel = makeLabel(
@@ -174,7 +179,7 @@ local lobbyEyebrow = makeLabel(
 	lobbyPanel,
 	UDim2.new(0.08, 0, 0.12, 0),
 	UDim2.new(0.84, 0, 0, 26),
-	"YOUR NEXT GAME STARTS HERE",
+	"BINGO CLUB",
 	13,
 	COLORS.teal,
 	Enum.Font.GothamBold
@@ -186,7 +191,7 @@ local lobbyTitle = makeLabel(
 	lobbyPanel,
 	UDim2.new(0.08, 0, 0.23, 0),
 	UDim2.new(0.84, 0, 0, 58),
-	"Gather your crew",
+	"Ready to play Bingo?",
 	30,
 	COLORS.white,
 	Enum.Font.GothamBlack
@@ -198,7 +203,7 @@ local lobbyStatus = makeLabel(
 	lobbyPanel,
 	UDim2.new(0.08, 0, 0.43, 0),
 	UDim2.new(0.84, 0, 0, 56),
-	"Waiting for players...",
+	"Walk to the glowing portal and press E or tap it to join.",
 	19,
 	COLORS.yellow,
 	Enum.Font.GothamBold
@@ -210,7 +215,7 @@ local lobbyCount = makeLabel(
 	lobbyPanel,
 	UDim2.new(0.08, 0, 0.61, 0),
 	UDim2.new(0.84, 0, 0, 30),
-	"0 / 2 players",
+	"0 / 2 players waiting",
 	16,
 	COLORS.muted,
 	Enum.Font.GothamMedium
@@ -222,7 +227,7 @@ local lobbyInstructions = makeLabel(
 	lobbyPanel,
 	UDim2.new(0.08, 0, 0.75, 0),
 	UDim2.new(0.84, 0, 0, 54),
-	"Listen for calls. Mark every number on your card to win.",
+	"Join at the Bingo portal. When the match starts, the MC will show you what to do.",
 	15,
 	COLORS.muted,
 	Enum.Font.Gotham
@@ -271,6 +276,31 @@ local callSubtext = makeLabel(
 	COLORS.muted,
 	Enum.Font.Gotham
 )
+callSubtext.TextSize = 11
+
+local sceneSkipButton = Instance.new("TextButton")
+sceneSkipButton.Name = "SkipScene"
+sceneSkipButton.AnchorPoint = Vector2.new(1, 0)
+sceneSkipButton.Position = UDim2.new(1, -12, 0, 10)
+sceneSkipButton.Size = UDim2.fromOffset(92, 30)
+sceneSkipButton.BackgroundColor3 = COLORS.panelLight
+sceneSkipButton.BorderSizePixel = 0
+sceneSkipButton.Text = "Skip scene"
+sceneSkipButton.TextColor3 = COLORS.white
+sceneSkipButton.TextSize = 12
+sceneSkipButton.Font = Enum.Font.GothamBold
+sceneSkipButton.Visible = false
+sceneSkipButton.Parent = callPanel
+addCorner(sceneSkipButton, 10)
+
+local callProgressBack = makeFrame(
+	"CallProgressBack",
+	callPanel,
+	UDim2.new(0.04, 0, 1, -8),
+	UDim2.new(0.92, 0, 0, 4),
+	COLORS.panelLight
+)
+local callProgress = makeFrame("CallProgress", callProgressBack, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), COLORS.teal)
 
 local cardPanel = makeFrame("CardPanel", gamePanel, UDim2.new(0, 0, 0, 96), UDim2.new(1, 0, 0, 360), COLORS.cream)
 addCorner(cardPanel, 18)
@@ -362,6 +392,61 @@ local loadingLabel = makeLabel(
 
 local currentSnapshot: Snapshot? = nil
 local cellButtons: { [number]: TextButton } = {}
+local activeSceneKey = ""
+local skippedSceneKey = ""
+local revealedCardMatchId = -1
+local sceneToken = 0
+local cameraTween: Tween? = nil
+
+local function restoreGameplayCamera(): ()
+	sceneToken += 1
+	if cameraTween then
+		cameraTween:Cancel()
+		cameraTween = nil
+	end
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	camera.CameraType = Enum.CameraType.Custom
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		camera.CameraSubject = humanoid
+	end
+end
+
+local function playCameraScene(sceneKey: string, duration: number): ()
+	if activeSceneKey == sceneKey then
+		return
+	end
+	activeSceneKey = sceneKey
+	skippedSceneKey = ""
+	sceneToken += 1
+	local thisSceneToken = sceneToken
+	local camera = Workspace.CurrentCamera
+	local world = Workspace:FindFirstChild("BingoWorld")
+	local mc = world and world:FindFirstChild("BingoMC")
+	local head = mc and mc:FindFirstChild("Head")
+	if camera and head and head:IsA("BasePart") then
+		camera.CameraType = Enum.CameraType.Scriptable
+		local focus = head.Position
+		local target = CFrame.lookAt(focus + Vector3.new(0, 1.5, -10), focus)
+		local tweenDuration = math.min(0.8, math.max(0.2, duration))
+		cameraTween = TweenService:Create(
+			camera,
+			TweenInfo.new(tweenDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ CFrame = target }
+		)
+		cameraTween:Play()
+	end
+	task.delay(math.max(0.1, duration), function()
+		if sceneToken == thisSceneToken then
+			restoreGameplayCamera()
+		end
+	end)
+end
+
 for cellIndex = 1, 25 do
 	local button = Instance.new("TextButton")
 	button.Name = `Cell{cellIndex}`
@@ -390,6 +475,19 @@ for cellIndex = 1, 25 do
 		markCellRemote:FireServer(snapshot.matchId, cellIndex)
 	end)
 end
+
+sceneSkipButton.Activated:Connect(function()
+	local snapshot = currentSnapshot
+	if not snapshot then
+		return
+	end
+	skippedSceneKey = activeSceneKey
+	sceneSkipButton.Visible = false
+	if snapshot.phase == "MatchIntro" and snapshot.isParticipant then
+		skipSceneRemote:FireServer(snapshot.matchId)
+	end
+	restoreGameplayCamera()
+end)
 
 ----- State Rendering -----
 local function formatCall(number: number?): string
@@ -423,38 +521,87 @@ local function render(snapshot: Snapshot)
 	currentSnapshot = snapshot
 	loadingLabel.Visible = false
 	local isActiveParticipant = snapshot.isParticipant
-	local isPlaying = isActiveParticipant and (snapshot.phase == "CallingNumbers" or snapshot.phase == "RoundComplete")
+	local isPlaying = isActiveParticipant and (
+		snapshot.phase == "MatchIntro" or snapshot.phase == "CallingNumbers" or snapshot.phase == "RoundComplete"
+	)
 	lobbyPanel.Visible = not isPlaying
 	gamePanel.Visible = isPlaying
-	phasePill.Text = if snapshot.phase == "CallingNumbers" and isActiveParticipant then "IN GAME"
+	phasePill.Text = if snapshot.phase == "MatchIntro" and isActiveParticipant then "MEET THE MC"
+		elseif snapshot.phase == "CallingNumbers" and isActiveParticipant then "IN GAME"
 		elseif snapshot.phase == "RoundComplete" and isActiveParticipant then "RESULTS"
 		elseif snapshot.phase == "LobbyCountdown" then "STARTING"
 		else "LOBBY"
 
 	local playersNeeded = math.max(0, snapshot.minimumPlayers - snapshot.waitingPlayers)
 	if snapshot.phase == "LobbyCountdown" then
-		lobbyStatus.Text = `Match starts in {snapshot.timeRemaining}...`
+		lobbyStatus.Text = if snapshot.isQueued
+			then `Match starts in {snapshot.timeRemaining}...`
+			else "A match is starting. Use the portal to join the next one."
 		lobbyStatus.TextColor3 = COLORS.teal
-	elseif snapshot.phase == "CallingNumbers" or snapshot.phase == "RoundComplete" then
-		lobbyStatus.Text = "A match is in progress. You're next!"
+	elseif snapshot.phase == "MatchIntro" or snapshot.phase == "CallingNumbers" or snapshot.phase == "RoundComplete" then
+		lobbyStatus.Text = if snapshot.isQueued then "You're queued for the next match." else "A match is in progress. Use the portal to join next."
 		lobbyStatus.TextColor3 = COLORS.yellow
 	elseif playersNeeded > 0 then
-		lobbyStatus.Text = `Waiting for {playersNeeded} more player{if playersNeeded == 1 then "" else "s"}...`
+		lobbyStatus.Text = if snapshot.isQueued
+			then `In line! Waiting for {playersNeeded} more player{if playersNeeded == 1 then "" else "s"}...`
+			else "Walk to the glowing portal and press E or tap it to join."
 		lobbyStatus.TextColor3 = COLORS.yellow
 	else
 		lobbyStatus.Text = "Getting the next match ready..."
 		lobbyStatus.TextColor3 = COLORS.teal
 	end
-	lobbyCount.Text = `{snapshot.waitingPlayers} / {snapshot.minimumPlayers} players in lobby`
+	lobbyCount.Text = `{snapshot.waitingPlayers} / {snapshot.minimumPlayers} players in the queue`
+	lobbyInstructions.Text = if snapshot.isQueued
+		then "You're in line. Use the glowing portal again to leave the queue."
+		else "Walk to the glowing Bingo portal and press E or tap the prompt to join."
 	if snapshot.phase == "LobbyWaiting" or snapshot.phase == "LobbyCountdown" then
-		lobbyTitle.Text = "Gather your crew"
+		lobbyTitle.Text = if snapshot.isQueued then "You're in the queue" else "Ready to play Bingo?"
 	elseif not isActiveParticipant then
 		lobbyTitle.Text = "You're up next"
 	end
 
 	if isPlaying then
-		currentCall.Text = formatCall(snapshot.lastCalledNumber)
-		callSubtext.Text = if snapshot.phase == "CallingNumbers" then "Mark it on your card" else "Thanks for playing!"
+		local isIntro = snapshot.phase == "MatchIntro"
+		local isResults = snapshot.phase == "RoundComplete"
+		if isIntro then
+			callCaption.Text = if snapshot.isFirstMatch then "WELCOME TO BINGO!" else "WELCOME BACK!"
+			currentCall.Text = if snapshot.isFirstMatch
+				then "Find my number. Tap it to mark it."
+				else "Watch for my number. Tap it to mark it."
+			currentCall.TextSize = 18
+			callSubtext.Text = "Fill your card to win. Center is FREE."
+			callProgress.Size = UDim2.fromScale(0, 1)
+			local sceneKey = `{snapshot.matchId}:intro`
+			playCameraScene(sceneKey, math.max(snapshot.timeRemaining, 1))
+			if revealedCardMatchId ~= snapshot.matchId then
+				revealedCardMatchId = snapshot.matchId
+				cardPanel.ClipsDescendants = true
+				cardPanel.Size = UDim2.new(1, 0, 0, 0)
+				TweenService:Create(
+					cardPanel,
+					TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+					{ Size = UDim2.new(1, 0, 0, 360) }
+				):Play()
+			end
+		elseif isResults then
+			callCaption.Text = "MC ANNOUNCES"
+			currentCall.Text = formatCall(snapshot.lastCalledNumber)
+			currentCall.TextSize = 34
+			callSubtext.Text = if snapshot.result and snapshot.result.isDraw
+				then "MC: No winner this time."
+				else `MC: {if snapshot.result then snapshot.result.winnerName or "A player" else "A player"} got Bingo!`
+			callProgress.Size = UDim2.fromScale(0, 1)
+			playCameraScene(`{snapshot.matchId}:result`, 3)
+		else
+			callCaption.Text = `NEXT CALL IN {snapshot.timeRemaining}s`
+			currentCall.Text = formatCall(snapshot.lastCalledNumber)
+			currentCall.TextSize = 34
+			callSubtext.Text = "MC: Tap it. Fill your card to win."
+			callProgress.Size = UDim2.fromScale(math.clamp(snapshot.timeRemaining / 5, 0, 1), 1)
+		end
+		local currentSceneKey = if isIntro then `{snapshot.matchId}:intro` elseif isResults then `{snapshot.matchId}:result` else ""
+		sceneSkipButton.Visible = currentSceneKey ~= "" and currentSceneKey ~= skippedSceneKey
+		sceneSkipButton.Text = if isResults then "Continue" else "Skip scene"
 		renderCard(snapshot.card)
 		local recent: { string } = {}
 		local startIndex = math.max(1, #snapshot.calledNumbers - 4)
@@ -463,16 +610,20 @@ local function render(snapshot: Snapshot)
 		end
 		recentCalls.Text = `Recent: {if #recent > 0 then table.concat(recent, "   ·   ") else "—"}`
 
-		resultBanner.Visible = snapshot.phase == "RoundComplete"
-		if snapshot.phase == "RoundComplete" and snapshot.result then
+		resultBanner.Visible = isResults
+		if isResults and snapshot.result then
 			if snapshot.result.isDraw then
 				resultTitle.Text = "NO BINGO THIS TIME"
 				resultDetail.Text = `All numbers called · Lobby in {snapshot.timeRemaining}s`
 			else
-				resultTitle.Text = if snapshot.result.winnerUserId == player.UserId then "BINGO! YOU WON!" else "BINGO!"
+				resultTitle.Text = if snapshot.result.winnerUserId == player.UserId
+					then "BINGO! YOU WON!"
+					else `{snapshot.result.winnerName or "A player"} GOT BINGO!`
 				resultDetail.Text = `{snapshot.result.winnerName or "A player"} wins · Lobby in {snapshot.timeRemaining}s`
 			end
 		end
+	else
+		sceneSkipButton.Visible = false
 	end
 
 	toast.Text = snapshot.notice or ""
