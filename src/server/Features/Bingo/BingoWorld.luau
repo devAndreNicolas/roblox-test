@@ -22,6 +22,8 @@ local MATCH_POSITIONS = {
 local portalPrompt: ProximityPrompt? = nil
 local portalStatus: TextLabel? = nil
 local mcDialogue: TextLabel? = nil
+local placementTasks: {[Player]: thread} = {}
+local worldGeneration = 0
 
 local function makePart(
 	parent: Instance,
@@ -63,7 +65,7 @@ local function makeBillboard(
 	billboard.Size = UDim2.fromOffset(width, height)
 	billboard.StudsOffset = studsOffset
 	billboard.AlwaysOnTop = true
-	billboard.MaxDistance = 100
+	billboard.MaxDistance = if name == "PortalSign" then 48 else 36
 	billboard.Parent = adornee
 
 	local label = Instance.new("TextLabel")
@@ -183,11 +185,43 @@ end
 local WorldService = {}
 
 function WorldService.Start(): ProximityPrompt
+	worldGeneration += 1
 	local _, prompt, dialogue, sign = buildWorld()
 	portalPrompt = prompt
 	mcDialogue = dialogue
 	portalStatus = sign
 	return prompt
+end
+
+function WorldService.PlacePlayer(player: Player, resolve: () -> CFrame): ()
+	local previous = placementTasks[player]
+	if previous then pcall(task.cancel, previous) end
+	local generation = worldGeneration
+	placementTasks[player] = task.defer(function()
+		local deadline = os.clock() + 10
+		while os.clock() < deadline and player.Parent and generation == worldGeneration do
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if root and root:IsA("BasePart") and character == player.Character then
+				root.CFrame = resolve()
+				placementTasks[player] = nil
+				return
+			end
+			task.wait(0.1)
+		end
+		placementTasks[player] = nil
+	end)
+end
+
+function WorldService.RemovePlayer(player: Player): ()
+	local pending = placementTasks[player]
+	if pending then pcall(task.cancel, pending); placementTasks[player] = nil end
+end
+
+function WorldService.Destroy(): ()
+	worldGeneration += 1
+	for player in placementTasks do WorldService.RemovePlayer(player) end
+	portalPrompt = nil; portalStatus = nil; mcDialogue = nil
 end
 
 function WorldService.GetLobbyCFrame(): CFrame

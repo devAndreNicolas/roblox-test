@@ -1,6 +1,6 @@
 --!strict
 -- Server composition root for the Bingo MVP.
 
-local RoundService = require(script:WaitForChild("Services"):WaitForChild("RoundService"))
+local RoundService = require(script:WaitForChild("Features"):WaitForChild("Bingo"):WaitForChild("BingoService"))
 
 RoundService.Start()
