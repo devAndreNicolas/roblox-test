@@ -112,6 +112,7 @@ function Controller.Start(): ()
 		local width, height = size.X, size.Y
 		if width <= 0 or height <= 0 then return end
 		local touch = UserInputService.TouchEnabled
+		audio.Layout(width, height, touch, model.view)
 		for index, expires in pending do
 			if os.clock() >= expires or not snapshot or snapshot.phase ~= "CallingNumbers"
 				or (snapshot.card and snapshot.card[index] and snapshot.card[index].isMarked) then pending[index] = nil end
@@ -129,14 +130,44 @@ function Controller.Start(): ()
 		local noticeWidth = math.min(if horizontal then width * 0.4 else width - 32, 400)
 		local x = if horizontal and model.view == "Match" then 16 else (width - noticeWidth) / 2
 		local y = if model.view == "Lobby" then 176 elseif horizontal then height - 36
+			elseif model.view == "Match" then height - (if touch then 106 else 78)
 			else height - (if touch then 106 else 36)
 		Surface.Rect(status.Instance, x, y, noticeWidth, 30)
 		status.Tick()
 	end
 	remote = RemoteClient.new(function(snapshot: Types.Snapshot)
 		if not alive then return end
-		local newSession = not current or current.sessionId ~= snapshot.sessionId
+		local previous = current
+		local newSession = not previous or previous.sessionId ~= snapshot.sessionId
 		if current and not newSession and snapshot.matchId < current.matchId then return end
+		if previous and not newSession and snapshot.matchId == previous.matchId and previous.card and snapshot.card then
+			for index, cell in previous.card do
+				local nextCell = snapshot.card[index]
+				if cell.isMarked and nextCell and not nextCell.isMarked then return end
+			end
+		end
+		local sameMatch = previous ~= nil and not newSession and previous.matchId == snapshot.matchId
+		local confirmedIndex: number? = nil
+		local leadMilestone = false
+		local oneAway = false
+		local resultStarted = previous ~= nil and sameMatch and previous.phase ~= "RoundComplete" and snapshot.phase == "RoundComplete"
+		if previous and sameMatch and previous.card and snapshot.card then
+			for index, cell in snapshot.card do
+				local oldCell = previous.card[index]
+				if oldCell and not oldCell.isMarked and cell.isMarked and not cell.isFree then
+					confirmedIndex = index
+				end
+			end
+		end
+		if previous and sameMatch and previous.standings and snapshot.standings and snapshot.phase == "CallingNumbers" then
+			local oldLeader = previous.standings[1]
+			local nextLeader = snapshot.standings[1]
+			if oldLeader and nextLeader then
+				leadMilestone = (oldLeader.remaining > 3 and nextLeader.remaining <= 3)
+					or (oldLeader.remaining > 1 and nextLeader.remaining == 1)
+				oneAway = nextLeader.remaining == 1
+			end
+		end
 		if newSession then
 			scene.Stop(false); activeScene = nil; status.Clear()
 		end
@@ -147,6 +178,15 @@ function Controller.Start(): ()
 		current = snapshot; receivedAt = os.clock()
 		status.Update(snapshot.notice, snapshot.matchId)
 		render()
+		if confirmedIndex and snapshot.phase == "CallingNumbers" then
+			match.CelebrateMark(confirmedIndex)
+			if not leadMilestone then audio.PlayMark() end
+		end
+		if leadMilestone then
+			match.CelebrateLead()
+			audio.PlayNearWin(oneAway)
+		end
+		if resultStarted and snapshot.result and not snapshot.result.isDraw then audio.PlayWin() end
 	end)
 	gui.Parent = playerGui
 	local accumulated = 0

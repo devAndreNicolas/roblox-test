@@ -30,6 +30,7 @@ function Service.Start(): ()
 	local called: {[number]: boolean} = {}
 	local deck: {number} = {}
 	local result: Types.Result? = nil
+	local standings: {Types.Standing} = {}
 	local connections: {RBXScriptConnection} = {}
 	local characters: {[Player]: RBXScriptConnection} = {}
 	local portalTimes: {[Player]: number} = {}
@@ -38,6 +39,31 @@ function Service.Start(): ()
 	local function setPhase(nextPhase: Types.Phase, seconds: number): ()
 		phase, duration = nextPhase, seconds
 		deadline = if seconds > 0 then os.clock() + seconds else 0
+	end
+	local function updateStandings(): ()
+		local rows: {Types.Standing} = {}
+		for userId, participant in participants do
+			local player = Players:GetPlayerByUserId(userId)
+			if player then
+				local marked = 0
+				for _, cell in participant.card do
+					if not cell.isFree and cell.isMarked then marked += 1 end
+				end
+				table.insert(rows, {userId = userId, displayName = player.DisplayName,
+					markedCount = marked, remaining = 24 - marked, rank = 0})
+			end
+		end
+		table.sort(rows, function(a: Types.Standing, b: Types.Standing): boolean
+			if a.remaining ~= b.remaining then return a.remaining < b.remaining end
+			return a.userId < b.userId
+		end)
+		local previousRemaining: number? = nil
+		local rank = 0
+		for index, row in rows do
+			if row.remaining ~= previousRemaining then rank = index; previousRemaining = row.remaining end
+			row.rank = rank
+		end
+		standings = rows
 	end
 	local function snapshot(player: Player, notice: Types.Notice?): Types.Snapshot
 		local participant = participants[player.UserId]
@@ -50,6 +76,7 @@ function Service.Start(): ()
 			isQueuedForCurrentMatch = queue.IsInFirst(player.UserId, Config.MAXIMUM_PLAYERS_PER_MATCH),
 			isFirstMatch = if participant then participant.first else false,
 			card = if participant then Rules.CopyCard(participant.card) else nil,
+			standings = if participant then standings else nil,
 			calledNumbers = table.clone(calls), lastCalledNumber = calls[#calls], result = result, notice = notice,
 		}
 	end
@@ -86,6 +113,7 @@ function Service.Start(): ()
 	local function reset(): ()
 		local previous = participants
 		participants, calls, called, deck, skipped = {}, {}, {}, {}, {}
+		standings = {}
 		result = nil
 		setPhase("LobbyWaiting", 0)
 		for _, player in Players:GetPlayers() do if previous[player.UserId] then place(player) end end
@@ -128,6 +156,7 @@ function Service.Start(): ()
 			end
 		end
 		if not next(participants) then reset(); return end
+		updateStandings()
 		setPhase("MatchIntro", intro)
 		World.SetMCDialogue("Find my number. Tap your card. Fill it to win!")
 		World.SetReady()
@@ -152,10 +181,15 @@ function Service.Start(): ()
 			local rejection = Rules.ValidateMark(participant.card, called, index)
 			if rejection then send(player, rejection, "error"); return end
 			participant.card[index].isMarked = true
+			updateStandings()
 			if Rules.IsComplete(participant.card) then
 				finish({isDraw = false, winnerUserId = player.UserId, winnerName = player.DisplayName})
 				broadcast()
-			else send(player, "Marked!", "success") end
+			else
+				for _, other in Players:GetPlayers() do
+					if other == player then send(other, "Marked!", "success") else send(other) end
+				end
+			end
 		end,
 	})
 	local prompt = World.Start()
@@ -178,6 +212,7 @@ function Service.Start(): ()
 	table.insert(connections, Players.PlayerAdded:Connect(added))
 	table.insert(connections, Players.PlayerRemoving:Connect(function(player: Player)
 		queue.Leave(player.UserId); participants[player.UserId] = nil
+		updateStandings()
 		seen[player.UserId] = nil; skipped[player.UserId] = nil; portalTimes[player] = nil
 		if characters[player] then characters[player]:Disconnect(); characters[player] = nil end
 		World.ForgetPlayer(player); transport.RemovePlayer(player)

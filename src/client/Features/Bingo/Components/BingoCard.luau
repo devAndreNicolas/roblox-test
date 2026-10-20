@@ -30,7 +30,8 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	local connections: {RBXScriptConnection} = {}
 	local scales: {UIScale} = {}
 	local markTweens: {[number]: Tween} = {}
-	local lastMarked: {[number]: boolean} = {}
+	local glints: {TextLabel} = {}
+	local glintTweens: {[number]: Tween} = {}
 	local current: {Types.CardCell}? = nil
 	local mode = "preview"
 	local currentCalled: {[number]: boolean} = {}
@@ -45,6 +46,10 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		local stamp = Surface.Text(button, "Stamp", 14, Theme.White, Theme.Bold)
 		stamp.Text = "✓"; stamp.TextXAlignment = Enum.TextXAlignment.Right
 		stamp.Position = UDim2.new(1, -16, 0, 0); stamp.Size = UDim2.fromOffset(14, 16); stamp.Visible = false
+		local glint = Surface.Text(button, "Glint", 23, Theme.Spotlight, Theme.Bold)
+		glint.Text = "✦"; glint.TextXAlignment = Enum.TextXAlignment.Center
+		glint.Size = UDim2.fromOffset(28, 28); glint.Position = UDim2.new(0.5, -14, 0.5, -14)
+		glint.TextTransparency = 1; glint.ZIndex = 5; glints[index] = glint
 		button.Parent = grid
 		buttons[index] = button; stamps[index] = stamp
 		table.insert(connections, button.Activated:Connect(function()
@@ -55,6 +60,26 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		table.insert(connections, button.SelectionLost:Connect(function() focus.Enabled = false end))
 	end
 	local card = {Instance = root}
+	function card.Celebrate(index: number): ()
+		local button = buttons[index]
+		if not button then return end
+		local oldMark = markTweens[index]
+		if oldMark then oldMark:Cancel() end
+		local oldGlint = glintTweens[index]
+		if oldGlint then oldGlint:Cancel() end
+		local scale = scales[index]
+		scale.Scale = 1.14
+		local markTween = TweenService:Create(scale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1})
+		markTweens[index] = markTween
+		markTween:Play()
+		local glint = glints[index]
+		glint.Position = UDim2.new(0.5, -14, 0.5, -14)
+		glint.TextTransparency = 0
+		local glintTween = TweenService:Create(glint, TweenInfo.new(0.42, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{Position = UDim2.new(0.5, -14, 0, -12), TextTransparency = 1})
+		glintTweens[index] = glintTween
+		glintTween:Play()
+	end
 	function card.Render(values: {Types.CardCell}?, nextMode: string, pending: {[number]: number}, called: {[number]: boolean}?): ()
 		current, mode, currentCalled = values, nextMode, called or {}
 		for index, button in buttons do
@@ -62,16 +87,6 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			local marked = cell ~= nil and cell.isMarked
 			local free = cell ~= nil and cell.isFree
 			local calledCell = mode ~= "play" or (cell ~= nil and currentCalled[cell.number] == true)
-			if marked and not free and not lastMarked[index] then
-				local previous = markTweens[index]
-				if previous then previous:Cancel() end
-				local scale = scales[index]
-				scale.Scale = 1.16
-				local nextTween = TweenService:Create(scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1})
-				markTweens[index] = nextTween
-				nextTween:Play()
-			end
-			lastMarked[index] = marked
 			button.Text = if free then "★" elseif cell then tostring(cell.number) else "·"
 			button.TextSize = if root.AbsoluteSize.X < 240 then 16 else 22
 			button.BackgroundColor3 = if free then Theme.Spotlight elseif marked then Theme.Mark elseif pending[index] then Theme.Spotlight elseif not calledCell then Theme.Disabled else Theme.White
@@ -83,6 +98,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	end
 	function card.Destroy(): ()
 		for _, tween in markTweens do tween:Cancel() end
+		for _, tween in glintTweens do tween:Cancel() end
 		for _, connection in connections do connection:Disconnect() end
 		root:Destroy()
 	end

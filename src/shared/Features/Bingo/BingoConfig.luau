@@ -15,6 +15,9 @@ local GameConfig = {
 	MARK_REQUEST_INTERVAL_SECONDS = 0.1,
 	-- Free Creator Store prototype track; replace with founder-created music when ready.
 	TEMP_JAZZ_SOUND_ID = "rbxassetid://101443293051695",
+	-- Replaceable free Roblox Creator Store prototype SFX; playback is optional.
+	MARK_CLICK_SOUND_ID = "rbxassetid://16480568148",
+	MARK_NOTE_SOUND_ID = "rbxassetid://16480570986",
 }
 
 return table.freeze(GameConfig)

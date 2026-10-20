@@ -1,0 +1,3 @@
+I loved the new atmosphere and visuals. The scenario. But in match, its cloying to mark, and mark... and mark... MARK a number needs to unlock DOPAMINE in player. A ideas that i have to improve matches: 
+1. More effects and sounds to unlock dopamine in players when they mark a number that MC announced. Ex: Candy Crush example
+2. Show a list of players that are close to win the match, and use effects in list to press it the 2nd and 1th place.

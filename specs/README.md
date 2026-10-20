@@ -11,6 +11,7 @@ Current feature folders:
 - `001-bingo-match/` — implemented prototype; Studio verification checklist remains open.
 - [002-ui-improvements](002-ui-improvements/spec.md) — revised proposal covering UI, audited bug fixes, and feature refactoring; includes a technical plan, traceable tasks, and a validation matrix.
 - [003-fantasy-scenario](003-fantasy-scenario/spec.md) — Bingo Noir: Mistério no Ar backstage and TV studio implemented in source; solo Studio checks recorded, wider validation open.
+- [004-sfx-fantasy-dopamina](004-sfx-fantasy-dopamina/spec.md) — match feedback and Bingo Race implemented in source; solo Studio checks partially recorded, wider validation pending.
 
 Cross-feature product context:
 
@@ -31,11 +32,17 @@ specs/
 │   ├── tasks.md
 │   ├── validation.md
 │   └── research/
-└── 003-fantasy-scenario/
-    ├── spec.md          # world experience and acceptance scenarios
-    ├── plan.md          # environment design and implementation approach
+├── 003-fantasy-scenario/
+│   ├── spec.md          # world experience and acceptance scenarios
+│   ├── plan.md          # environment design and implementation approach
+│   ├── tasks.md         # implementation and verification checklist
+│   ├── validation.md    # visual, runtime, and playtest checks
+│   └── research/        # raw feedback and source audit
+└── 004-sfx-fantasy-dopamina/
+    ├── spec.md          # mark feedback and live race behavior
+    ├── plan.md          # server progress, client effects, and UI approach
     ├── tasks.md         # implementation and verification checklist
-    ├── validation.md    # visual, runtime, and playtest checks
+    ├── validation.md    # runtime and player playtest checks
     └── research/        # raw feedback and source audit
 ```
 

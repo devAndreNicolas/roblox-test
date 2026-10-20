@@ -2,7 +2,7 @@
 
 **Status:** Proto-persona hypotheses plus secondary market research; not validated audience profiles.
 **Purpose:** Give us a shared way to discuss whose needs the Bingo MVP and its scenario should serve. Use this document when reviewing feature specs, but do not treat a hypothesis as a requirement until we confirm it through discussion or playtests.
-**Research inputs:** [Roblox platform and competitor research](#roblox-audience-and-bingo-market-research), [001 first playtest feedback](001-bingo-match/research/playtest-feedback.md), [002 owner feedback](002-ui-improvements/research/playtest-feedback.md), and [003 scenario feedback](003-fantasy-scenario/research/playtest-feedback.md).
+**Research inputs:** [Roblox platform and competitor research](#roblox-audience-and-bingo-market-research), [001 first playtest feedback](001-bingo-match/research/playtest-feedback.md), [002 owner feedback](002-ui-improvements/research/playtest-feedback.md), [003 scenario feedback](003-fantasy-scenario/research/playtest-feedback.md), and [004 match feedback](004-sfx-fantasy-dopamina/research/playtest-feedback.md).
 
 ## What we know so far
 
@@ -15,6 +15,7 @@ The owner directly reported:
 - A desire for an MC who explains the game and hosts the match.
 - A UI that feels confusing and visually crowded.
 - A scenario that feels empty and unattractive; “buggy and annoying” without reproduction steps.
+- After the scenario update, an atmosphere they liked but repetitive marking during the match; they suggested stronger mark feedback and visibility into who is close to Bingo.
 
 These statements are useful evidence about one play experience. They do not yet establish the age, habits, motivations, or preferences of the game's broader audience.
 
