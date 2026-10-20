@@ -219,3 +219,13 @@ Record each participant separately in the appropriate feature's `research/` fold
 ## Review notes
 
 Use the questions above to revise this draft together. Use the child and teen personas as separate lenses to analyze [003 — Bingo Noir: Mistério no Ar](003-fantasy-scenario/spec.md). Look for one shared world that supports both, then validate visual and pacing choices with both age groups rather than treating the broad target as proof that one design automatically works for everyone.
+
+## Rewards and monetization lens (unvalidated)
+
+The owner has prioritized retention for the next lobby experiment and wants both children and teenagers to find a reason to return. This is a product goal, not evidence that a daily track will improve retention. The proposed **Recompensas Diárias** advances by completed matches and preserves progress when a player misses a day; test whether players understand that protection and feel invited rather than pressured.
+
+The proposed **Suborno do MC** is intentionally a gameplay item, not a cosmetic. It has a per-player and per-match cap, changes the next shared call, and does not mark a square automatically. It may create a funny, memorable shared event; it may also feel unfair, especially when bought for Robux. Neither response is established. Test comprehension and fairness with children and teens separately, and compare wins/complaints among users and non-users before tuning it.
+
+The proposed card themes change only the visual frame. The child-player lens prioritizes readable numbers and clear free/marked/called states; the teen-player lens asks whether themes feel distinctive enough to express identity. In both cases, theme artwork must not obscure the card or suggest a gameplay advantage. A theme's purchase rate alone does not establish that players like or understand the game.
+
+For this experiment, avoid streak loss, expiring rewards, random paid rewards, false scarcity, and pressure language. Ask whether players would return voluntarily, what they think they are earning, and whether they feel spending is needed. Record these observations under [005 research](005-lobby-rewards-monetization/research/playtest-feedback.md) and revise the hypotheses only after repeat patterns appear.
