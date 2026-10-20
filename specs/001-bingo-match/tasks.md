@@ -8,6 +8,7 @@
 - [ ] Confirm published servers require two queued players and Studio override stays Studio-only.
 - [ ] Verify portal enrollment, visible queue count, countdown, and cancellation.
 - [ ] Verify participant lock at match start and next-match handling for late arrivals.
+- [ ] Verify the 8-player cap and that overflow remains queued in FIFO order for the next match.
 - [ ] Verify server-generated cards, column ranges, unique values per column, and free center.
 - [ ] Verify shared no-repeat calls, configurable pacing, marking rules, winner, and draw.
 - [ ] Verify player join/leave and stale requests through repeated rounds.

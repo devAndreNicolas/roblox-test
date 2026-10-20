@@ -6,9 +6,9 @@ export type NoticeKind = "success" | "error" | "info"
 export type Notice = { id: number, kind: NoticeKind, text: string }
 export type Snapshot = {
 	kind: "Snapshot", sessionId: string, phase: Phase, matchId: number,
-	minimumPlayers: number, waitingPlayers: number, timeRemaining: number,
+	minimumPlayers: number, maximumPlayers: number, waitingPlayers: number, timeRemaining: number,
 	callIntervalSeconds: number, phaseDurationSeconds: number,
-	isParticipant: boolean, isQueued: boolean, isFirstMatch: boolean,
+	isParticipant: boolean, isQueued: boolean, isQueuedForCurrentMatch: boolean, isFirstMatch: boolean,
 	card: {CardCell}?, calledNumbers: {number}, lastCalledNumber: number?,
 	result: Result?, notice: Notice?,
 }

@@ -12,11 +12,19 @@ function State.Derive(snapshot: Types.Snapshot?, completed: {[string]: boolean})
 	if not snapshot then return model end
 	local s = snapshot
 	model.seconds = math.ceil(s.timeRemaining)
-	model.count = `{s.waitingPlayers} / {s.minimumPlayers} players ready`
+	model.count = `{s.waitingPlayers} queued • min {s.minimumPlayers} • max {s.maximumPlayers}`
 	if not s.isParticipant then
 		if s.phase == "LobbyCountdown" then
-			model.title = if s.isQueued then `Starting in {model.seconds}s` else `Join this round • {model.seconds}s`
-			model.detail = if s.isQueued then "You're in! Use the portal again to leave." else "Use the glowing portal before the countdown ends."
+			if s.isQueuedForCurrentMatch then
+				model.title = `Starting in {model.seconds}s`
+				model.detail = "You're in this match! Use the portal again to leave."
+			elseif s.isQueued then
+				model.title = "Queued for the next round"
+				model.detail = "This match is full. Stay in the lobby for your turn."
+			else
+				model.title = `Join this round • {model.seconds}s`
+				model.detail = "Use the glowing portal before the countdown ends."
+			end
 		elseif s.phase == "LobbyWaiting" then
 			model.title = if s.isQueued then "You're in the queue!" else "Let's play Bingo"
 			model.detail = if s.isQueued then `Waiting for {math.max(0, s.minimumPlayers - s.waitingPlayers)} more. Use the portal to leave.`

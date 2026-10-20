@@ -43,10 +43,11 @@ function Service.Start(): ()
 		local participant = participants[player.UserId]
 		return {
 			kind = "Snapshot", sessionId = sessionId, phase = phase, matchId = matchId,
-			minimumPlayers = minimum, waitingPlayers = queue.Count(),
+			minimumPlayers = minimum, maximumPlayers = Config.MAXIMUM_PLAYERS_PER_MATCH, waitingPlayers = queue.Count(),
 			timeRemaining = math.max(0, deadline - os.clock()), phaseDurationSeconds = duration,
 			callIntervalSeconds = Config.CALL_INTERVAL_SECONDS,
 			isParticipant = participant ~= nil, isQueued = queue.Contains(player.UserId),
+			isQueuedForCurrentMatch = queue.IsInFirst(player.UserId, Config.MAXIMUM_PLAYERS_PER_MATCH),
 			isFirstMatch = if participant then participant.first else false,
 			card = if participant then Rules.CopyCard(participant.card) else nil,
 			calledNumbers = table.clone(calls), lastCalledNumber = calls[#calls], result = result, notice = notice,
@@ -63,8 +64,8 @@ function Service.Start(): ()
 	end
 	local function broadcast(): ()
 		local count = queue.Count()
-		local message = if phase == "LobbyCountdown" then `BINGO • {math.ceil(math.max(0, deadline - os.clock()))}s\n{count} IN THE QUEUE`
-			elseif phase == "LobbyWaiting" then `BINGO CLUB\n{count} / {minimum} READY\nUSE PORTAL TO JOIN`
+		local message = if phase == "LobbyCountdown" then `BINGO • {math.ceil(math.max(0, deadline - os.clock()))}s\n{count} QUEUED • MAX {Config.MAXIMUM_PLAYERS_PER_MATCH}`
+			elseif phase == "LobbyWaiting" then `BINGO CLUB\n{count} QUEUED • {minimum} TO START\nMAX {Config.MAXIMUM_PLAYERS_PER_MATCH} PER MATCH`
 			else `BINGO CLUB\n{count} WAITING FOR NEXT MATCH`
 		World.SetQueueStatus(message)
 		for _, player in Players:GetPlayers() do send(player) end
@@ -111,7 +112,7 @@ function Service.Start(): ()
 		deck = Rules.Shuffle(random, 1, 75)
 		result = nil
 		local intro = Config.REPEAT_INTRO_SECONDS
-		for _, id in queue.TakeEligible() do
+		for _, id in queue.TakeEligible(Config.MAXIMUM_PLAYERS_PER_MATCH) do
 			local player = Players:GetPlayerByUserId(id)
 			if player then
 				local first = not seen[id]

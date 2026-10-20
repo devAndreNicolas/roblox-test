@@ -19,6 +19,7 @@ For each player, note:
 - Whether they can explain the goal and marking action in their own words.
 - Time until their first valid mark and moments of hesitation or confusion.
 - Whether they stay through a round and choose to play another.
+- Whether players left waiting for the next match understand their place and remain in the lobby.
 - Whether call pacing gives enough time to read, find, and mark.
 
 Ask after play:

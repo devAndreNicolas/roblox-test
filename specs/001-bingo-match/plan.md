@@ -40,7 +40,7 @@ LobbyWaiting -> LobbyCountdown -> MatchIntro -> CallingNumbers -> RoundComplete
       +------------------------------------------------+----------------+
 ```
 
-At countdown completion, the server locks the queued participants, deals cards, and starts an intro. The first match for each player in the server session gets the full tutorial, up to 8 seconds; repeat matches get a kickoff of up to 3 seconds. Calls then begin at the configured interval. A result is presented, then participants return to the lobby after 8 seconds. Players may queue for the next match while another match is active.
+Each Roblox server instance owns one FIFO queue and one active match. At countdown completion, the server takes up to eight players from the front of the queue, leaves overflow queued in order, deals cards, and starts an intro. The minimum is two players in published servers; Studio may use its one-player development override. The first match for each player in the server session gets the full tutorial, up to 8 seconds; repeat matches get a kickoff of up to 3 seconds. Calls then begin at the configured interval. A result is presented, then participants return to the lobby after 8 seconds. Nonparticipants stay in the lobby and may queue for the next match while another match is active.
 
 ## Network contract
 

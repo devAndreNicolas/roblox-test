@@ -30,9 +30,11 @@ No persistent progression, economy, global matchmaking, or paid advantages are i
 - **MUST** add a player to the queue only after they interact with the portal.
 - **MUST** show queue status, queued-player count, and countdown near the portal.
 - **MUST** require two queued players in published servers before starting.
+- **MUST** cap each match at eight participants; additional queued players keep their FIFO position for the next match.
 - **MUST** begin a visible 10-second countdown when the minimum is met and cancel it if the queue drops below two.
 - **MUST** lock the participant list when the countdown ends.
 - **MUST** tell late arrivals and unqueued players that they can join the next match; they do not enter the active match.
+- **MUST** let nonparticipants remain in and use the lobby while a match is active, and let them queue for the next match.
 - **MAY** allow a one-player development override in Studio only.
 
 ### Explain and present the game
@@ -90,6 +92,14 @@ No persistent progression, economy, global matchmaking, or paid advantages are i
 **When** the second player joins the queue at the Bingo portal  
 **Then** both see the queue count and a 10-second countdown  
 **And** if the queue drops below two before it ends, the countdown is cancelled.
+
+### A match has a clear size and overflow stays queued
+
+**Given** ten players are queued when the countdown ends
+**When** the match starts
+**Then** the first eight queued players enter the match
+**And** the remaining two stay queued in their original order for the next match
+**And** those two are told that the current match is full and they are queued next.
 
 ### Late arrival waits for the next match
 
