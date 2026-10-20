@@ -1,2 +1,5 @@
-1. The UI it is so bug. Everything in front of everything. Dont respecting the context, cutscene... The literally UI, shapes, forms, color, everything so POOR and bug! Literally trash, i cant play, i cant enjoy game because the game flow, UI is so trash, horrible. 
-2. The UI, Logic, Utils, is everything in one files.... We need to separate, be feature based, reutilize, turn componentized, separate concerns, because if we dont do that, bugs will ocourr and will be so confuse and complex to solve. 
+[x] The UI it is so bug. Everything in front of everything. Dont respecting the context, cutscene... The literally UI, shapes, forms, color, everything so POOR and bug! Literally trash, i cant play, i cant enjoy game because the game flow, UI is so trash, horrible. 
+
+[x] The UI, Logic, Utils, is everything in one files.... We need to separate, be feature based, reutilize, turn componentized, separate concerns, because if we dont do that, bugs will ocourr and will be so confuse and complex to solve. 
+
+[] When i click out the paper or another place, are... skipping? i dont understand that. Its confuse to me. 
