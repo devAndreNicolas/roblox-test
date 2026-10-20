@@ -16,7 +16,7 @@ function View.new(parent: Instance, skip: () -> ())
 	local caption = Surface.Panel(root, "Caption", Theme.Paper)
 	local speaker = Surface.Text(caption, "Speaker", 14, Theme.Stage, Theme.Bold)
 	local instruction = Surface.Text(caption, "Instruction", 16)
-	local action = Button.new(caption, "Skip intro", skip)
+	local action = Button.new(caption, "Skip scene", skip)
 	local waiting = Surface.Text(caption, "Waiting", 14, Theme.Muted, Theme.Bold)
 	local view = {Instance = root}
 	function view.Layout(width: number, height: number, touch: boolean): ()
@@ -48,9 +48,7 @@ function View.new(parent: Instance, skip: () -> ())
 	function view.Render(model: State.Model): ()
 		local snapshot = model.snapshot
 		if not snapshot then return end
-		-- Make the preview's input rules explicit: the card/backdrop are not
-		-- skip targets. The labeled button is the only scene-skip action.
-		speaker.Text = if model.sceneActive then "BINGO MC · CARD PREVIEW ONLY" else "YOUR CARD IS READY"
+		speaker.Text = if model.sceneActive then "BINGO MC · " .. model.title else "YOUR CARD IS READY"
 		instruction.Text = model.detail
 		action.Instance.Visible = model.sceneActive
 		waiting.Visible = not model.sceneActive

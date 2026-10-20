@@ -111,7 +111,7 @@ This groups by the Bingo domain. Lobby/intro/match/results are views within that
 | PresentationState | Pure derive(snapshot, localSceneState) -> presentation model. Centralizes role/phase selection, visibility, labels, and allowed actions. No Instances/remotes/timers. |
 | ScenePresenter | Play(key, duration, onComplete), Stop(reason), Destroy. Owns camera capture, tween, completion, character/camera listeners, and local world-caption suppression. Completion callback cannot outlive its scene. |
 | Views | Mount(parent, intents), Render(model), Destroy. Own layout and local UI handlers. Instances created during Mount, not require. Hide/inactivate old view before showing new one; rendering is repeatable without scene side effects. |
-| BingoCard | Create(parent, onMarkIntent), Render(card, mode, pending), Destroy. Owns the grid, preview/play/read-only modes, cell visuals, and input. Does not import remotes. |
+| BingoCard | Create(parent, onMarkIntent), Render(card, mode, pending, calledSet), Destroy. Owns the grid, preview/play/read-only modes, per-cell eligibility/mark visuals, and input. During play, only unmarked cells in calledSet are selectable. Does not import remotes. |
 | UI primitives | Small interfaces for consistent theme, actions, and notices. StatusMessage owns notice expiry. Avoid generic instance-factory abstractions unless real repetition warrants them. |
 | BingoService | Start/Destroy; owns phase, match id, participants/cards, calls, results, deadlines and generation guards. Coordinates queue, rules, transport, and world. One authoritative match owner. |
 | BingoQueue | Join/Leave/Contains/Count/TakeEligible/Clear; sole owner of queue membership. Service determines when enrollment is permitted and when countdown/lock occurs. No world/remote access. |
@@ -131,6 +131,7 @@ Retain remote names and existing client request argument order: RoundUpdate, Mar
 - notice: optional structured {id, kind, text}, with kind success/error/info. StatusMessage keeps a notice until local expiry and ignores repeat IDs.
 
 Keep timeRemaining authoritative in each snapshot. Local monotonic elapsed time may interpolate the bar between snapshots, clamped at zero; only a server update advances game phase/call. Do not invent a called number when a client timer expires.
+MarkCell(matchId, cellIndex) can change only the caller's card. A valid accepted mark cannot advance the call timer; only the server deadline announces the next number. The client derives cell eligibility from the full calledNumbers list and sends no mark request for an uncalled cell. A completed card can transition the match to results.
 
 Local scene state is keyed by matchId and scene kind, with idle/playing/completed/skipped states. Scene completion never resets simply because a new snapshot arrives. Keep scene duration distinct from server phase duration.
 

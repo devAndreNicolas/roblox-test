@@ -39,7 +39,7 @@ function State.Derive(snapshot: Types.Snapshot?, completed: {[string]: boolean})
 		model.detail = `Back to the lobby in {model.seconds}s`
 	elseif s.phase == "CallingNumbers" then
 		model.view = "Match"; model.title = "Your Bingo card"
-		model.detail = if s.isFirstMatch then "Tap called numbers. Fill your card to win. ★ is free." else "Fill your card to win."
+		model.detail = "Calls auto-advance. Tap called numbers to mark."
 	end
 	if model.sceneKey then model.sceneActive = not completed[model.sceneKey] and model.sceneDuration > 0 end
 	return model

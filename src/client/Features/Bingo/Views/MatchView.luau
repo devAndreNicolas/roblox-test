@@ -12,7 +12,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	local call = Surface.Panel(root, "Call", Theme.Ink)
 	local ball = Ball.new(call)
 	local caption = Surface.Text(call, "Caption", 14, Theme.Paper, Theme.Bold)
-	caption.Text = "MC'S NUMBER"
+	caption.Text = "CALLED NUMBER"
 	local timing = Surface.Text(call, "Timing", 16, Theme.White)
 	local progressBack = Surface.Panel(call, "Track", Theme.Muted, 4)
 	local progress = Surface.Panel(progressBack, "Progress", Theme.Spotlight, 4)
@@ -57,9 +57,11 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		local snapshot = model.snapshot
 		if not snapshot then return end
 		ball.Render(snapshot.lastCalledNumber)
-		timing.Text = `Next in {model.seconds}s`
+		timing.Text = `Auto call in {model.seconds}s`
 		progress.Size = UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
-		card.Render(snapshot.card, "play", pending)
+		local called: {[number]: boolean} = {}
+		for _, number in snapshot.calledNumbers do called[number] = true end
+		card.Render(snapshot.card, "play", pending, called)
 		local recent = {}
 		for index = math.max(1, #snapshot.calledNumbers - 3), #snapshot.calledNumbers do
 			table.insert(recent, Ball.Format(snapshot.calledNumbers[index]))

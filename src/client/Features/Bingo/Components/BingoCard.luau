@@ -29,6 +29,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	local connections: {RBXScriptConnection} = {}
 	local current: {Types.CardCell}? = nil
 	local mode = "preview"
+	local currentCalled: {[number]: boolean} = {}
 	for index = 1, 25 do
 		local button = Instance.new("TextButton")
 		button.Name = `Cell{index}`; button.LayoutOrder = index; button.BorderSizePixel = 0
@@ -43,23 +44,24 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		buttons[index] = button; stamps[index] = stamp
 		table.insert(connections, button.Activated:Connect(function()
 			local cell = current and current[index]
-			if mode == "play" and cell and not cell.isMarked then intent(index) end
+			if mode == "play" and cell and not cell.isMarked and currentCalled[cell.number] then intent(index) end
 		end))
 		table.insert(connections, button.SelectionGained:Connect(function() focus.Enabled = true end))
 		table.insert(connections, button.SelectionLost:Connect(function() focus.Enabled = false end))
 	end
 	local card = {Instance = root}
-	function card.Render(values: {Types.CardCell}?, nextMode: string, pending: {[number]: number}): ()
-		current, mode = values, nextMode
+	function card.Render(values: {Types.CardCell}?, nextMode: string, pending: {[number]: number}, called: {[number]: boolean}?): ()
+		current, mode, currentCalled = values, nextMode, called or {}
 		for index, button in buttons do
 			local cell = values and values[index]
 			local marked = cell ~= nil and cell.isMarked
 			local free = cell ~= nil and cell.isFree
+			local calledCell = mode ~= "play" or (cell ~= nil and currentCalled[cell.number] == true)
 			button.Text = if free then "★" elseif cell then tostring(cell.number) else "·"
 			button.TextSize = if root.AbsoluteSize.X < 240 then 16 else 22
-			button.BackgroundColor3 = if free then Theme.Spotlight elseif marked then Theme.Mark elseif pending[index] then Theme.Spotlight else Theme.White
-			button.TextColor3 = if marked and not free then Theme.White else Theme.Ink
-			button.Active = mode == "play" and cell ~= nil and not marked
+			button.BackgroundColor3 = if free then Theme.Spotlight elseif marked then Theme.Mark elseif pending[index] then Theme.Spotlight elseif not calledCell then Theme.Disabled else Theme.White
+			button.TextColor3 = if marked and not free then Theme.White elseif not calledCell and not free then Theme.Muted else Theme.Ink
+			button.Active = mode == "play" and cell ~= nil and not marked and calledCell
 			button.Selectable = button.Active
 			stamps[index].Visible = marked and not free and root.AbsoluteSize.X >= 240
 		end
