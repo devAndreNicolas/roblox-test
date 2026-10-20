@@ -10,16 +10,33 @@ Current feature folders:
 
 - `001-bingo-match/` — implemented prototype; Studio verification checklist remains open.
 - [002-ui-improvements](002-ui-improvements/spec.md) — revised proposal covering UI, audited bug fixes, and feature refactoring; includes a technical plan, traceable tasks, and a validation matrix.
+- [003-fantasy-scenario](003-fantasy-scenario/spec.md) — Bingo Noir: Mistério no Ar backstage and TV studio implemented in source; solo Studio checks recorded, wider validation open.
+
+Cross-feature product context:
+
+- [Player personas](player-personas.md) — collaborative proto-persona hypotheses; not yet validated with a broad player sample.
 
 ```text
 specs/
 ├── README.md
-└── 001-bingo-match/
-    ├── spec.md          # player-visible behavior and acceptance scenarios
-    ├── plan.md          # architecture and implementation decisions
+├── 001-bingo-match/
+│   ├── spec.md          # player-visible behavior and acceptance scenarios
+│   ├── plan.md          # architecture and implementation decisions
+│   ├── tasks.md         # implementation and verification checklist
+│   ├── validation.md    # acceptance, regression, or product playtest checks
+│   └── research/        # source feedback and observations
+├── 002-ui-improvements/
+│   ├── spec.md
+│   ├── plan.md
+│   ├── tasks.md
+│   ├── validation.md
+│   └── research/
+└── 003-fantasy-scenario/
+    ├── spec.md          # world experience and acceptance scenarios
+    ├── plan.md          # environment design and implementation approach
     ├── tasks.md         # implementation and verification checklist
-    ├── validation.md    # acceptance, regression, or product playtest checks
-    └── research/        # source feedback and observations, when available
+    ├── validation.md    # visual, runtime, and playtest checks
+    └── research/        # raw feedback and source audit
 ```
 
 ## Working loop

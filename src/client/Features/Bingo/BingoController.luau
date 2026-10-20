@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
 local Types = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo.BingoTypes)
 local UI = script.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
@@ -9,12 +10,14 @@ local Status = require(UI.StatusMessage)
 local State = require(script.Parent.PresentationState)
 local RemoteClient = require(script.Parent.BingoRemoteClient)
 local Scene = require(script.Parent.ScenePresenter)
+local ShowAudio = require(script.Parent.ShowAudio)
 local Lobby = require(script.Parent.Views.LobbyView)
 local Intro = require(script.Parent.Views.IntroView)
 local Match = require(script.Parent.Views.MatchView)
 local Results = require(script.Parent.Views.ResultsView)
 local Controller = {}
 local cleanup: (() -> ())? = nil
+local SEATED_JUMP_ACTION = "BingoSeatedJump"
 
 function Controller.Start(): ()
 	if cleanup then return end
@@ -29,6 +32,19 @@ function Controller.Start(): ()
 	feedbackLayer.Name = "FeedbackLayer"; feedbackLayer.BackgroundTransparency = 1
 	feedbackLayer.Size = UDim2.fromScale(1, 1); feedbackLayer.ZIndex = 20; feedbackLayer.Parent = gui
 	local status = Status.new(feedbackLayer)
+	local audio = ShowAudio.new(gui)
+	local jumpBlocked = false
+	local function setJumpBlocked(value: boolean): ()
+		if value == jumpBlocked then return end
+		jumpBlocked = value
+		if value then
+			ContextActionService:BindActionAtPriority(SEATED_JUMP_ACTION, function()
+				return Enum.ContextActionResult.Sink
+			end, false, 3000, Enum.PlayerActions.CharacterJump)
+		else
+			ContextActionService:UnbindAction(SEATED_JUMP_ACTION)
+		end
+	end
 	local current: Types.Snapshot? = nil
 	local receivedAt = os.clock()
 	local loadingSince = os.clock()
@@ -83,6 +99,9 @@ function Controller.Start(): ()
 			end
 		end
 		scene.SetParticipant(snapshot ~= nil and snapshot.isParticipant)
+		local isParticipant = snapshot ~= nil and snapshot.isParticipant
+		audio.SetParticipant(isParticipant)
+		setJumpBlocked(isParticipant)
 		for name, viewRoot in roots do viewRoot.Visible = name == model.view end
 		if previousView ~= model.view then
 			if previousView == "Intro" then intro.Exit() end
@@ -142,6 +161,7 @@ function Controller.Start(): ()
 	end)
 	cleanup = function()
 		alive = false; heartbeat:Disconnect(); remote.Destroy(); scene.Destroy()
+		setJumpBlocked(false); audio.Destroy()
 		lobby.Destroy(); intro.Destroy(); match.Destroy(); results.Destroy(); status.Destroy()
 		gui:Destroy()
 	end

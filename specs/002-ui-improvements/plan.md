@@ -11,22 +11,25 @@ The existing Rojo mappings already separate client/server/shared. Keep those map
 
 ## 2. Visual design proposal
 
-**Subject:** a social Bingo club presented by an MC. **Main job:** help a new player follow a call and mark a paper card.
+**Subject:** a family-friendly noir TV Bingo show hosted by an original MC. Backstage is the waiting area; participants enter the separate studio at match start. **Main job:** help a new player follow a call and mark a paper card.
 
 The signature is a large numbered call ball beside a cream paper card; confirmed marks look like ink stamps with a check/ring. Reserve visual energy for the new call, accepted mark, card reveal, and winner. Scene captions use a quiet readable surface, not another competing game panel.
 
 | Token | Proposed value / use |
 |---|---|
-| Stage | #233CB9, restrained blue accent/background for scene framing |
-| Paper | #FFF8E7, card and light surfaces |
-| Ink | #16243A, primary text and outlines on light surfaces |
-| Mark | #17775B, accepted marks with a visible check/ring |
-| Spotlight | #F7C65B, current call/free-space emphasis, dark text |
-| Alert | #D6485C, error accent accompanied by explicit text/icon |
-| Typography | Rounded bold display for short headings; legible bold numerals; Gotham body/captions. Scale: 14 secondary, 16 body, 24 heading, 36–48 call number. |
+| Midnight | #101A33, studio/background framing |
+| Deep blue | #233B68, structural panels and secondary surfaces |
+| Amber | #F2B84B, active call and spotlight emphasis with dark text |
+| Ivory | #FFF4D8, card and readable light surfaces |
+| Ink | #172033, text and outlines on ivory surfaces |
+| Burgundy | #7D3048, restrained dramatic accent |
+| Mark | Dark green with visible stamp/check; retain sufficient contrast on ivory |
+| Alert | Red accent accompanied by explicit text/icon |
+| Typography | Oswald for short titles; Gotham for body, numerals, captions and controls. Scale: 14 secondary, 16 body, 24 heading, 36–48 call number. |
 | Spacing | 4/8/12/16/24 UI pixels; consistent padding and gaps |
 | Surfaces | Paper card, compact status strip, caption panel; avoid wrapping every label in its own pill |
 | Motion | Short call/mark feedback; card reveal and camera motion are cancellable and optional for comprehension |
+| Audio | Temporary optional instrumental broadcast jazz; mute control; all essential instructions remain visual |
 
 Verify contrast in actual UI. Error/mark colors need not be used as small text on dark surfaces. Use text/icons as well as color. Shared primitives include focused/pressed/disabled states; actions retain the same label and meaning across contexts.
 

@@ -13,6 +13,8 @@ local GameConfig = {
 	CALL_INTERVAL_SECONDS = 5,
 	RESULT_DURATION_SECONDS = 8,
 	MARK_REQUEST_INTERVAL_SECONDS = 0.1,
+	-- Free Creator Store prototype track; replace with founder-created music when ready.
+	TEMP_JAZZ_SOUND_ID = "rbxassetid://101443293051695",
 }
 
 return table.freeze(GameConfig)

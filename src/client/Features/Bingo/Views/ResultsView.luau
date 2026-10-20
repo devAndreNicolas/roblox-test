@@ -5,11 +5,15 @@ local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local Button = require(UI.ActionButton)
 local State = require(script.Parent.Parent.PresentationState)
+local TweenService = game:GetService("TweenService")
 local View = {}
 function View.new(parent: Instance, skip: () -> ())
 	local root = Instance.new("Frame"); root.Name = "ResultsView"; root.BackgroundTransparency = 1
 	root.Size = UDim2.fromScale(1, 1); root.Parent = parent
 	local panel = Surface.Panel(root, "Outcome", Theme.Paper)
+	local scale = Instance.new("UIScale"); scale.Parent = panel
+	local reveal: Tween? = nil
+	local lastMatchId: number? = nil
 	local eyebrow = Surface.Text(panel, "Eyebrow", 14, Theme.Stage, Theme.Bold)
 	local title = Surface.Text(panel, "Title", 30, Theme.Ink, Theme.Display)
 	local detail = Surface.Text(panel, "Detail", 16)
@@ -29,6 +33,13 @@ function View.new(parent: Instance, skip: () -> ())
 	function view.Render(model: State.Model): ()
 		local snapshot = model.snapshot
 		if not snapshot then return end
+		if snapshot.matchId ~= lastMatchId then
+			lastMatchId = snapshot.matchId
+			if reveal then reveal:Cancel() end
+			scale.Scale = 0.82
+			reveal = TweenService:Create(scale, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1})
+			reveal:Play()
+		end
 		local result = snapshot.result
 		local ownWin = result and result.winnerUserId == Players.LocalPlayer.UserId
 		eyebrow.Text = if ownWin then "★ FULL CARD! ★" elseif result and result.isDraw then "ROUND COMPLETE" else "WE HAVE A WINNER"
@@ -39,7 +50,7 @@ function View.new(parent: Instance, skip: () -> ())
 		detail.Text = model.detail
 		action.Instance.Visible = model.sceneActive
 	end
-	function view.Destroy(): () action.Destroy(); root:Destroy() end
+	function view.Destroy(): () if reveal then reveal:Cancel() end; action.Destroy(); root:Destroy() end
 	return view
 end
 return View

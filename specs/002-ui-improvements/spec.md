@@ -23,7 +23,7 @@ Cover loading, lobby exploration, queue/countdown, first and repeat introduction
 
 Retain the established game: portal opt-in, two-player public minimum, Studio solo override, 10-second countdown, 5×5 card/free center, full-card win, five-second default calls, eight-second results, and server authority. Correctness fixes may change faulty implementation and misleading copy.
 
-Proposed visual direction: **Bingo Club**, a friendly game-show setting with a paper card, stamped marks, and a distinctive numbered call ball. Mobile portrait is the layout stress case; desktop and mobile landscape are equally required delivery targets. These are working design decisions, adjustable during review.
+Visual direction: **Bingo Noir: Mistério no Ar**, a family-friendly theatrical noir TV show with dark Art Deco framing, midnight blue and amber, ivory cards, and restrained burgundy accents. Use Oswald for short titles and Gotham for functional text. Retain the paper card, stamped marks, and distinctive numbered call ball. UI must support the world described in [003](../003-fantasy-scenario/spec.md). Mobile portrait is the layout stress case; desktop and mobile landscape are equally required delivery targets.
 
 Exclude economy, persistence, new Bingo variants, global matchmaking, custom asset production, and framework adoption. Refactoring includes server responsibilities involved in this flow; it is not an unrestricted rewrite.
 

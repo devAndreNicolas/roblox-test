@@ -17,6 +17,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	local progressBack = Surface.Panel(call, "Track", Theme.Muted, 4)
 	local progress = Surface.Panel(progressBack, "Progress", Theme.Spotlight, 4)
 	local card = Card.new(root, onMark)
+	local lastMatchId: number? = nil
 	local history = Surface.Text(root, "History", 14, Theme.Paper, Theme.Bold)
 	local reminder = Surface.Text(root, "Reminder", 16, Theme.Paper)
 	local historyPanel = Surface.Panel(root, "HistorySurface", Theme.Ink, 12)
@@ -27,12 +28,11 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		if horizontal then
 			local right = if touch then 96 else 24
 			local cw = math.max(270, math.min(400, height - 64, (width - right - 48) * 0.48))
-			local total = math.min(860, width - right - 24)
-			local left = math.max(16, (width - total - right + 24) / 2)
-			local info = total - cw - 20
-			Surface.Rect(card.Instance, left + info + 20, math.max(12, (height - cw - 32) / 2), cw, cw + 32)
+			local left = 20
+			local info = math.max(260, math.min(350, width - right - cw - 56))
+			Surface.Rect(card.Instance, width - right - cw, math.max(12, (height - cw - 32) / 2), cw, cw + 32)
 			Surface.Rect(call, left, 20, info, 108)
-			Surface.Rect(historyPanel, left, 140, info, math.min(132, height - 196))
+			Surface.Rect(historyPanel, left, math.max(140, height - 164), info, math.min(132, height - 196))
 			Surface.Rect(history, 12, 8, info - 24, 40)
 			Surface.Rect(reminder, 12, 52, info - 24, 64)
 		else
@@ -56,6 +56,10 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	function view.Render(model: State.Model, pending: {[number]: number}): ()
 		local snapshot = model.snapshot
 		if not snapshot then return end
+		if snapshot.matchId ~= lastMatchId then
+			lastMatchId = snapshot.matchId
+			ball.Render(nil)
+		end
 		ball.Render(snapshot.lastCalledNumber)
 		timing.Text = `Auto call in {model.seconds}s`
 		progress.Size = UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)

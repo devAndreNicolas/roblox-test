@@ -64,16 +64,16 @@ function Service.Start(): ()
 	end
 	local function broadcast(): ()
 		local count = queue.Count()
-		local message = if phase == "LobbyCountdown" then `BINGO • {math.ceil(math.max(0, deadline - os.clock()))}s\n{count} QUEUED • MAX {Config.MAXIMUM_PLAYERS_PER_MATCH}`
-			elseif phase == "LobbyWaiting" then `BINGO CLUB\n{count} QUEUED • {minimum} TO START\nMAX {Config.MAXIMUM_PLAYERS_PER_MATCH} PER MATCH`
-			else `BINGO CLUB\n{count} WAITING FOR NEXT MATCH`
+		local message = if phase == "LobbyCountdown" then `BINGO NOIR • {math.ceil(math.max(0, deadline - os.clock()))}s\n{count} QUEUED • MAX {Config.MAXIMUM_PLAYERS_PER_MATCH}`
+			elseif phase == "LobbyWaiting" then `BINGO NOIR\n{count} QUEUED • {minimum} TO START\nMAX {Config.MAXIMUM_PLAYERS_PER_MATCH} PER MATCH`
+			else `BINGO NOIR\n{count} WAITING FOR NEXT MATCH`
 		World.SetQueueStatus(message)
 		for _, player in Players:GetPlayers() do send(player) end
 	end
 	local function place(player: Player): ()
 		World.PlacePlayer(player, function()
 			local participant = participants[player.UserId]
-			return if participant then World.GetMatchCFrame(participant.seat) else World.GetLobbyCFrame()
+			return if participant then participant.seat else nil
 		end)
 	end
 	local function considerCountdown(): ()
@@ -90,6 +90,7 @@ function Service.Start(): ()
 		setPhase("LobbyWaiting", 0)
 		for _, player in Players:GetPlayers() do if previous[player.UserId] then place(player) end end
 		World.SetMCDialogue("Ready for another round? Join at the portal!")
+		World.SetReady()
 		considerCountdown()
 	end
 	local function finish(outcome: Types.Result): ()
@@ -97,6 +98,7 @@ function Service.Start(): ()
 		result = outcome
 		setPhase("RoundComplete", Config.RESULT_DURATION_SECONDS)
 		World.SetMCDialogue(if outcome.isDraw then "No full card this time!" else `{outcome.winnerName or "A player"} got Bingo!`)
+		World.SetResult(if outcome.isDraw then "ROUND COMPLETE" else "BINGO!")
 	end
 	local function nextCall(): ()
 		local number = table.remove(deck)
@@ -105,6 +107,7 @@ function Service.Start(): ()
 		setPhase("CallingNumbers", Config.CALL_INTERVAL_SECONDS)
 		local letter = ({"B", "I", "N", "G", "O"})[math.ceil(number / 15)]
 		World.SetMCDialogue(`{letter} — {number}!`)
+		World.SetCall(letter, number)
 	end
 	local function startMatch(): ()
 		matchId += 1
@@ -127,6 +130,7 @@ function Service.Start(): ()
 		if not next(participants) then reset(); return end
 		setPhase("MatchIntro", intro)
 		World.SetMCDialogue("Find my number. Tap your card. Fill it to win!")
+		World.SetReady()
 	end
 	local function allSkipped(): boolean
 		if not next(participants) then return false end
@@ -176,7 +180,7 @@ function Service.Start(): ()
 		queue.Leave(player.UserId); participants[player.UserId] = nil
 		seen[player.UserId] = nil; skipped[player.UserId] = nil; portalTimes[player] = nil
 		if characters[player] then characters[player]:Disconnect(); characters[player] = nil end
-		World.RemovePlayer(player); transport.RemovePlayer(player)
+		World.ForgetPlayer(player); transport.RemovePlayer(player)
 		if not next(participants) and (phase == "MatchIntro" or phase == "CallingNumbers") then reset() end
 		considerCountdown()
 		for _, other in Players:GetPlayers() do if other ~= player then send(other) end end

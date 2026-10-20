@@ -1,0 +1,1 @@
+In this stage, we need to improve the fantasy, implementinng a immersive experience in our scenario. Actually, its so empty and bugging and annoying, ugly. We need to improve that, plan and improve. 

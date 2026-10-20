@@ -7,7 +7,7 @@ export type Model = {
 	snapshot: Types.Snapshot?, seconds: number,
 }
 function State.Derive(snapshot: Types.Snapshot?, completed: {[string]: boolean}): Model
-	local model: Model = {view = "Lobby", title = "Finding your game…", detail = "Connecting to the Bingo club.",
+	local model: Model = {view = "Lobby", title = "Finding your game…", detail = "Connecting to Bingo Noir.",
 		count = "", sceneDuration = 0, sceneActive = false, snapshot = snapshot, seconds = 0}
 	if not snapshot then return model end
 	local s = snapshot
@@ -20,18 +20,18 @@ function State.Derive(snapshot: Types.Snapshot?, completed: {[string]: boolean})
 				model.detail = "You're in this match! Use the portal again to leave."
 			elseif s.isQueued then
 				model.title = "Queued for the next round"
-				model.detail = "This match is full. Stay in the lobby for your turn."
+				model.detail = "This match is full. Stay backstage for your turn."
 			else
 				model.title = `Join this round • {model.seconds}s`
-				model.detail = "Use the glowing portal before the countdown ends."
+				model.detail = "Use the amber portal before the countdown ends."
 			end
 		elseif s.phase == "LobbyWaiting" then
-			model.title = if s.isQueued then "You're in the queue!" else "Let's play Bingo"
+			model.title = if s.isQueued then "You're in the queue!" else "Welcome backstage"
 			model.detail = if s.isQueued then `Waiting for {math.max(0, s.minimumPlayers - s.waitingPlayers)} more. Use the portal to leave.`
-				else "Walk to the glowing portal. Press E or tap its prompt."
+				else "Walk to the amber portal. Press E or tap its prompt."
 		else
 			model.title = if s.isQueued then "You're up next" else "A round is in progress"
-			model.detail = if s.isQueued then "Stay in the lobby. Your next round is on its way." else "Use the portal to join the next round."
+			model.detail = if s.isQueued then "Stay backstage. Your next round is on its way." else "Use the portal to join the next round."
 		end
 		return model
 	end

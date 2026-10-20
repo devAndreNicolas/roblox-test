@@ -9,7 +9,7 @@ function View.new(parent: Instance, retry: () -> ())
 	local root = Instance.new("Frame"); root.Name = "LobbyView"; root.BackgroundTransparency = 1
 	root.Size = UDim2.fromScale(1, 1); root.Parent = parent
 	local panel = Surface.Panel(root, "LobbyStatus", Theme.Paper)
-	local brand = Surface.Text(panel, "Brand", 14, Theme.Stage, Theme.Display); brand.Text = "BINGO CLUB"
+	local brand = Surface.Text(panel, "Brand", 14, Theme.Stage, Theme.Display); brand.Text = "BINGO NOIR • BACKSTAGE"
 	local title = Surface.Text(panel, "Title", 24, Theme.Ink, Theme.Display)
 	local detail = Surface.Text(panel, "Instructions", 16)
 	local count = Surface.Text(panel, "Queue", 14, Theme.Muted, Theme.Bold)
@@ -18,7 +18,7 @@ function View.new(parent: Instance, retry: () -> ())
 	local view = {Instance = root}
 	function view.Layout(width: number, _height: number, _touch: boolean): ()
 		local w = math.min(480, width - 32)
-		Surface.Rect(panel, (width - w) / 2, 12, w, 156)
+		Surface.Rect(panel, if width >= 760 then 24 else (width - w) / 2, 12, w, 156)
 		Surface.Rect(brand, 16, 12, w - 32, 20)
 		Surface.Rect(title, 16, 38, w - 32, 32)
 		Surface.Rect(detail, 16, 76, w - 32, 42)

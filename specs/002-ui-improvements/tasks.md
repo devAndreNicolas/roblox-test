@@ -19,7 +19,7 @@ Check a task after its stated outcome is demonstrated. Record verification separ
 
 ## C. UI and components
 
-- [ ] **T08** Implement the proposed Bingo Club theme and reusable ActionButton/StatusMessage behavior, including focus/pressed/disabled styles. Record the adopted token values. **UI-05; V03, V12**.
+- [ ] **T08** Implement the Bingo Noir theme tokens and reusable ActionButton/StatusMessage behavior, including focus/pressed/disabled styles. Record the adopted token values and verify contrast. **UI-05; V03, V12**.
 - [ ] **T09** Implement BingoCard preview/play/read-only modes, stamp/free/pending states, server-confirmed rendering, and pending cleanup. Implement CallBall in the match feature. **UI-04–06, ARCH-05; V03, V06**.
 - [ ] **T10** Implement compact LobbyView: visible world/portal, queued versus unqueued status, accurate join-now/next-match guidance. **UI-01/02, B08; V01, V02**.
 - [ ] **T11** Implement IntroView: unobstructed MC, separate caption/skip areas, readable card reveal, post-skip waiting and first-round reminder. Suppress competing billboards locally. **UI-02/07, B02/B03; V03–V05**.
