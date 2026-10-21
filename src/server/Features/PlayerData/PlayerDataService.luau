@@ -154,7 +154,7 @@ function Service.IsAvailable(userId: number): boolean
 end
 function Service.MutateUserId(userId: number, mutation: Mutation): (boolean, string, Profile?)
 	if unavailable[userId] then
-		return false, "Perfil indisponível. Tente novamente.", nil
+		return false, "Profile unavailable. Please try again.", nil
 	end
 	local message = "OK"
 	local ok, result = storage.Update(userId, function(raw: any)
@@ -168,7 +168,7 @@ function Service.MutateUserId(userId: number, mutation: Mutation): (boolean, str
 	end)
 	if not ok or typeof(result) ~= "table" then
 		warn("[PlayerData] Mutation failed", userId, result)
-		return false, "Não foi possível salvar agora. Tente novamente.", nil
+		return false, "Could not save right now. Please try again.", nil
 	end
 	local profile = normalize(result)
 	applyCache(userId, profile)

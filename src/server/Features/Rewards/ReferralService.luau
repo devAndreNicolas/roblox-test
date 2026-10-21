@@ -16,10 +16,10 @@ function Service.RecordJoin(player: Player): ()
 	end
 	PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 		if profile.completedMatches > 0 or profile.referrerUserId then
-			return false, "Convite já registrado ou conta existente."
+			return false, "Invite already registered or account already exists."
 		end
 		profile.referrerUserId = referrer
-		return true, "Convite registrado. Conclua sua primeira partida."
+		return true, "Invite registered. Finish your first match."
 	end)
 end
 
@@ -38,21 +38,21 @@ function Service.PayInviter(inviteeUserId: number, referrerUserId: number): bool
 	local marker = tostring(inviteeUserId)
 	local ok = PlayerData.MutateUserId(referrerUserId, function(profile: any): (boolean, string)
 		if profile.referralRewards[marker] then
-			return false, "Convite já recompensado."
+			return false, "Invite reward already granted."
 		end
 		profile.referralRewards[marker] = true
 		Inventory.GrantTheme(profile, "club_seal")
-		return true, "Selo do Clube recebido por convite!"
+		return true, "Club Seal received from an invite!"
 	end)
 	if not ok then
 		return false
 	end
 	PlayerData.MutateUserId(inviteeUserId, function(profile: any): (boolean, string)
 		if profile.referralInviterConfirmed then
-			return false, "Convite já concluído."
+			return false, "Invite already completed."
 		end
 		profile.referralInviterConfirmed = true
-		return true, "Convite concluído."
+		return true, "Invite completed."
 	end)
 	return true
 end

@@ -20,7 +20,7 @@ function View.new(parent: Instance, retry: () -> ())
 	local brand = Surface.Text(panel, "Brand", 13, Theme.Spotlight, Theme.Bold)
 	brand.Text = "BINGO NOIR  /  BACKSTAGE"
 	local live = Surface.Text(panel, "Live", 12, Theme.Spotlight, Theme.Bold)
-	live.Text = "● AO VIVO"
+	live.Text = "● LIVE"
 	live.TextXAlignment = Enum.TextXAlignment.Right
 	local title = Surface.Text(panel, "Title", 27, Theme.Paper, Theme.Display)
 	local detail = Surface.Text(panel, "Instructions", 16, Theme.Paper)

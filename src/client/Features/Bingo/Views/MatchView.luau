@@ -22,7 +22,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	callStroke.Parent = call
 	local ball = Ball.new(call)
 	local caption = Surface.Text(call, "Caption", 13, Theme.Spotlight, Theme.Bold)
-	caption.Text = "● AO VIVO  /  NÚMERO DA VEZ"
+	caption.Text = "● LIVE  /  CURRENT CALL"
 	local timing = Surface.Text(call, "Timing", 16, Theme.White)
 	local progressBack = Surface.Panel(call, "Track", Theme.Muted, 4)
 	local progress = Surface.Panel(progressBack, "Progress", Theme.Spotlight, 4)
@@ -103,10 +103,10 @@ function View.new(parent: Instance, onMark: (number) -> ())
 			local letter = if number then ({ "B", "I", "N", "G", "O" })[math.ceil(number / 15)] else "?"
 			subornTitle.Text = `O MC foi subornado! {letter}-{number or "?"}`
 			subornDetail.Text =
-				`{snapshot.subornBuyerName or "Um jogador"} escolheu a próxima chamada. Todos podem marcar; ninguém marca automaticamente.`
+				`{snapshot.subornBuyerName or "A player"} chose the next call. Everyone can mark it; nobody is marked automatically.`
 		end
 		ball.Render(if announcing then snapshot.subornNumber else snapshot.lastCalledNumber)
-		timing.Text = if announcing then "Próxima chamada para todos" else `Próxima chamada em {model.seconds}s`
+		timing.Text = if announcing then "Next call for everyone" else `Next call in {model.seconds}s`
 		progress.Size =
 			UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
 		local called: { [number]: boolean } = {}

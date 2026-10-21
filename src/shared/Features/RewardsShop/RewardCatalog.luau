@@ -11,7 +11,7 @@ Catalog.SUBORN_TARGET_ROBUX = 149
 Catalog.FICHA_PACKS = table.freeze({
 	{
 		id = "fichas_120",
-		name = "Punhado",
+		name = "Handful",
 		amount = 120,
 		productId = 3720520619,
 		targetRobux = 29,
@@ -19,7 +19,7 @@ Catalog.FICHA_PACKS = table.freeze({
 	},
 	{
 		id = "fichas_350",
-		name = "Pacote",
+		name = "Bundle",
 		amount = 350,
 		productId = 3720520624,
 		targetRobux = 79,
@@ -27,7 +27,7 @@ Catalog.FICHA_PACKS = table.freeze({
 	},
 	{
 		id = "fichas_800",
-		name = "Maleta",
+		name = "Case",
 		amount = 800,
 		productId = 3720520631,
 		targetRobux = 169,
@@ -42,7 +42,7 @@ Catalog.SUBORN_ICON = "rbxassetid://105872504074659"
 Catalog.THEMES = table.freeze({
 	{
 		id = "classic",
-		name = "Clássico",
+		name = "Classic",
 		fichas = 0,
 		passId = 0,
 		targetRobux = 0,
@@ -52,7 +52,7 @@ Catalog.THEMES = table.freeze({
 	},
 	{
 		id = "dossier_blue",
-		name = "Dossiê Azul",
+		name = "Blue Dossier",
 		fichas = 300,
 		passId = 2044514400,
 		targetRobux = 49,
@@ -62,7 +62,7 @@ Catalog.THEMES = table.freeze({
 	},
 	{
 		id = "stage_star",
-		name = "Estrela de Palco",
+		name = "Stage Star",
 		fichas = 700,
 		passId = 2045168372,
 		targetRobux = 99,
@@ -72,7 +72,7 @@ Catalog.THEMES = table.freeze({
 	},
 	{
 		id = "club_seal",
-		name = "Selo do Clube",
+		name = "Club Seal",
 		fichas = 700,
 		passId = 2045120362,
 		targetRobux = 99,
@@ -82,7 +82,7 @@ Catalog.THEMES = table.freeze({
 	},
 	{
 		id = "on_air",
-		name = "No Ar",
+		name = "On Air",
 		fichas = -1,
 		passId = 2045108372,
 		targetRobux = 99,
@@ -92,7 +92,7 @@ Catalog.THEMES = table.freeze({
 	},
 	{
 		id = "velvet_gala",
-		name = "Veludo de Gala",
+		name = "Gala Velvet",
 		fichas = -1,
 		passId = 2045330347,
 		targetRobux = 149,

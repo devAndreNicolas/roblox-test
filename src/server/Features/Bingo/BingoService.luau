@@ -291,15 +291,15 @@ function Service.Start(rewards: RewardBridge?, settings: {minimumPlayers: number
 	local function activateSuborn(player: Player): ()
 		local participant = participants[player.UserId]
 		if phase ~= "CallingNumbers" or not participant then
-			send(player, "Suborno só pode ser usado durante sua partida.", "error")
+			send(player, "MC Bribes can only be used during your match.", "error")
 			return
 		end
 		if subornUsers[player.UserId] or subornsUsed >= 2 or suborn or reservationToken then
-			send(player, "Limite de Subornos desta partida atingido.", "error")
+			send(player, "MC Bribe limit reached for this match.", "error")
 			return
 		end
 		if not rewards or not rewards.HasSuborn(player) then
-			send(player, "Sem Suborno no estoque. Abra a Loja no lobby.", "error")
+			send(player, "No MC Bribes in stock. Open the Shop in the lobby.", "error")
 			return
 		end
 		local token = HttpService:GenerateGUID(false)
@@ -311,7 +311,7 @@ function Service.Start(rewards: RewardBridge?, settings: {minimumPlayers: number
 					reservationToken = nil
 				end
 				if player.Parent then
-					send(player, "Não foi possível reservar o Suborno.", "error")
+					send(player, "Could not reserve the MC Bribe.", "error")
 				end
 				return
 			end
@@ -339,7 +339,7 @@ function Service.Start(rewards: RewardBridge?, settings: {minimumPlayers: number
 			if #eligible == 0 then
 				rewards.RefundSuborn(player.UserId, token)
 				if player.Parent then
-					send(player, "Nenhum número disponível na sua cartela.", "error")
+					send(player, "No available number on your card.", "error")
 				end
 				return
 			end

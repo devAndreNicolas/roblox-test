@@ -25,11 +25,11 @@ remote.OnServerEvent:Connect(function(player: Player, themeId: unknown)
 	end
 	local ok, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 		if profile.ownedThemes[themeId] then
-			return false, "Você já possui esse tema."
+			return false, "You already own this theme."
 		end
 		profile.ownedThemes[themeId] = true
 		profile.equippedTheme = themeId
-		return true, `Compra simulada: {theme.name} equipado!`
+		return true, `Simulated purchase: {theme.name} equipped!`
 	end)
 	if ok then
 		Rewards.Push(player, message)

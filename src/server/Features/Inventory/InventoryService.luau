@@ -12,9 +12,9 @@ function Service.GrantTheme(profile: any, themeId: string): boolean
 end
 function Service.Equip(profile: any, themeId: string): (boolean, string)
 	if not Catalog.FindTheme(themeId) or not profile.ownedThemes[themeId] then
-		return false, "Tema não disponível na coleção."
+		return false, "Theme is not in your collection."
 	end
 	profile.equippedTheme = themeId
-	return true, "Tema equipado!"
+	return true, "Theme equipped!"
 end
 return Service

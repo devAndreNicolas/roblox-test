@@ -52,35 +52,35 @@ function Adapter.new(onSnapshot: (any) -> (), onChanged: () -> ())
 	end
 
 	function result.PromptProduct(productId: number, reward: any): string?
-		if not reward or not reward.ready then return "Aguarde seu perfil carregar." end
-		if reward.purchaseMode ~= "real" and reward.purchaseMode ~= "simulated" then return "Compras desativadas para este perfil." end
-		if productId <= 0 then return "Compra Robux em preparação." end
-		if not prices[productId] then return "Preço indisponível. Tente novamente depois." end
+		if not reward or not reward.ready then return "Please wait for your profile to load." end
+		if reward.purchaseMode ~= "real" and reward.purchaseMode ~= "simulated" then return "Purchases are disabled for this profile." end
+		if productId <= 0 then return "Robux purchase is being prepared." end
+		if not prices[productId] then return "Price unavailable. Please try again later." end
 		local ok = pcall(function() MarketplaceService:PromptProductPurchase(player, productId) end)
-		return if ok then nil else "Não foi possível abrir a compra agora."
+		return if ok then nil else "Could not open the purchase right now."
 	end
 
 	function result.PromptPass(theme: any, reward: any): string?
-		if not reward or not reward.ready then return "Aguarde seu perfil carregar." end
-		if reward.purchaseMode ~= "real" and reward.purchaseMode ~= "simulated" then return "Compras desativadas para este perfil." end
-		if theme.passId <= 0 then return "Compra Robux em preparação." end
-		if reward.ownedThemes[theme.id] then return "Você já possui esse tema." end
-		if not prices[theme.passId] then return "Preço indisponível. Tente novamente depois." end
+		if not reward or not reward.ready then return "Please wait for your profile to load." end
+		if reward.purchaseMode ~= "real" and reward.purchaseMode ~= "simulated" then return "Purchases are disabled for this profile." end
+		if theme.passId <= 0 then return "Robux purchase is being prepared." end
+		if reward.ownedThemes[theme.id] then return "You already own this theme." end
+		if not prices[theme.passId] then return "Price unavailable. Please try again later." end
 		if reward.purchaseMode == "simulated" then
 			if purchaseOverride and purchaseOverride.PromptPass(theme.id) then return nil end
 			return "Use studio.project.json para simular passes."
 		end
 		local ok = pcall(function() MarketplaceService:PromptGamePassPurchase(player, theme.passId) end)
-		return if ok then nil else "Não foi possível abrir a compra agora."
+		return if ok then nil else "Could not open the purchase right now."
 	end
 
 	function result.Invite(onError: (string) -> ()): ()
 		task.spawn(function()
 			local ok, canInvite = pcall(function() return SocialService:CanSendGameInviteAsync(player) end)
 			if not alive then return end
-			if not ok or not canInvite then onError("Convites indisponíveis neste dispositivo."); return end
+			if not ok or not canInvite then onError("Invites are unavailable on this device."); return end
 			local prompted = pcall(function() SocialService:PromptGameInvite(player) end)
-			if not prompted and alive then onError("Não foi possível abrir o convite agora.") end
+			if not prompted and alive then onError("Could not open the invite right now.") end
 		end)
 	end
 

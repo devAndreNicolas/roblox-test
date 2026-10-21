@@ -74,8 +74,8 @@ function State.Derive(snapshot: Types.Snapshot?, completed: { [string]: boolean 
 		model.view = "Match"
 		model.sceneKey = `{s.matchId}:suborn:{s.subornNumber or 0}`
 		model.sceneDuration = math.min(2, s.timeRemaining)
-		model.title = "Suborno do MC"
-		model.detail = "O MC recebeu um Suborno! O próximo número vale para todos."
+		model.title = "MC Bribe"
+		model.detail = "The MC took a bribe! The next number is for everyone."
 	end
 	if model.sceneKey then
 		model.sceneActive = not completed[model.sceneKey] and model.sceneDuration > 0

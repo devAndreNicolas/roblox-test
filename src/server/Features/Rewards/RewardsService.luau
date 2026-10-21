@@ -51,28 +51,28 @@ end
 function Service.CommitSuborn(userId: number, token: string): boolean
 	local ok, message = PlayerData.MutateUserId(userId, function(profile: any): (boolean, string)
 		if profile.powerOperations[token] == "pending" or profile.powerOperations[token] == "resolved" then
-			return false, "Suborno reservado."
+			return false, "MC Bribe reserved."
 		end
 		if profile.suborns <= 0 then
-			return false, "Sem Suborno no estoque."
+			return false, "No MC Bribes in stock."
 		end
 		profile.suborns -= 1
 		profile.powerOperations[token] = "pending"
-		return true, "Suborno do MC usado!"
+		return true, "MC Bribe used!"
 	end)
 	local player = Players:GetPlayerByUserId(userId)
 	if ok and player then
 		Service.Push(player, message)
 	end
-	return ok and (message == "Suborno do MC usado!" or message == "Suborno reservado.")
+	return ok and (message == "MC Bribe used!" or message == "MC Bribe reserved.")
 end
 function Service.ResolveSuborn(userId: number, token: string): ()
 	PlayerData.MutateUserId(userId, function(profile: any): (boolean, string)
 		if profile.powerOperations[token] ~= "pending" then
-			return false, "Suborno já resolvido."
+			return false, "MC Bribe already resolved."
 		end
 		profile.powerOperations[token] = "resolved"
-		return true, "Suborno resolvido."
+		return true, "MC Bribe resolved."
 	end)
 end
 function Service.RefundSuborn(userId: number, token: string): ()
@@ -82,10 +82,10 @@ function Service.RefundSuborn(userId: number, token: string): ()
 		end
 		profile.powerOperations[token] = "refunded"
 		profile.suborns += 1
-		return true, "Suborno devolvido ao estoque."
+		return true, "MC Bribe returned to inventory."
 	end)
 	local player = Players:GetPlayerByUserId(userId)
-	if ok and player and message == "Suborno devolvido ao estoque." then
+	if ok and player and message == "MC Bribe returned to inventory." then
 		Service.Push(player, message)
 	end
 end
@@ -191,19 +191,19 @@ function Service.Start(): ()
 				local ok, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 					return Shop.Buy(profile, itemId)
 				end)
-				Service.Push(player, if ok then message else "Não foi possível salvar agora.")
+				Service.Push(player, if ok then message else "Could not save right now.")
 			elseif verb == "Equip" then
 				local ok, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 					return Inventory.Equip(profile, itemId)
 				end)
-				Service.Push(player, if ok then message else "Não foi possível salvar agora.")
+				Service.Push(player, if ok then message else "Could not save right now.")
 			end
 		end)
 	)
 	local function added(player: Player): ()
 		task.spawn(function()
 			if not PlayerData.Load(player) then
-				Service.Push(player, "Perfil indisponível.")
+				Service.Push(player, "Profile unavailable.")
 				return
 			end
 			Service.Push(player)

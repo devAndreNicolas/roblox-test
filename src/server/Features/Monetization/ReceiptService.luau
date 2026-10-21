@@ -41,15 +41,15 @@ function Service.Start(push: (Player, string?) -> ()): ()
 		end
 		local ok, message = PlayerData.MutateUserId(receiptInfo.PlayerId, function(profile: any): (boolean, string)
 			if profile.processedPurchases[receiptInfo.PurchaseId] then
-				return false, "Compra já concedida."
+				return false, "Purchase already granted."
 			end
 			profile.processedPurchases[receiptInfo.PurchaseId] = true
 			if isSuborn then
 				profile.suborns += 1
-				return true, "Suborno do MC adicionado ao estoque."
+				return true, "MC Bribe added to your inventory."
 			end
 			Economy.Credit(profile, pack.amount)
-			return true, `+{pack.amount} Fichas recebidas!`
+			return true, `+{pack.amount} Tickets received!`
 		end)
 		if not ok then
 			return Enum.ProductPurchaseDecision.NotProcessedYet
@@ -75,11 +75,11 @@ function Service.Start(push: (Player, string?) -> ()): ()
 							player.UserId,
 							function(profile: any): (boolean, string)
 								if profile.ownedThemes[theme.id] then
-									return false, "Tema já recebido."
+									return false, "Theme already received."
 								end
 								profile.ownedThemes[theme.id] = true
 								profile.equippedTheme = theme.id
-								return true, `Comprou e equipou {theme.name}!`
+								return true, `Bought and equipped {theme.name}!`
 							end
 						)
 						if saved then
@@ -107,12 +107,12 @@ function Service.ReconcilePasses(player: Player, push: (Player, string?) -> ()):
 		if ok and owns then
 			local saved, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 				if profile.ownedThemes[theme.id] then
-					return false, "Tema já recebido."
+					return false, "Theme already received."
 				end
 				profile.ownedThemes[theme.id] = true
-				return true, `Tema {theme.name} restaurado.`
+				return true, `Theme {theme.name} restored.`
 			end)
-			if saved and message ~= "Tema já recebido." then
+			if saved and message ~= "Theme already received." then
 				push(player, message)
 			end
 		end
