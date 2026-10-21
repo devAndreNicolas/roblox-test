@@ -645,19 +645,19 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			then ""
 			elseif purchaseMode == "simulated" and not unavailableOffer then (if selectedTab == "Cartelas"
 					and not platform.HasSimulatedPass()
-				then "Studio: use studio.project.json para simular passes."
+				then "Studio: use studio.project.json to simulate passes."
 				elseif
 					selectedTab == "Cartelas"
-				then "Studio: passe simulado no perfil temporário; nenhum Robux cobrado."
-				elseif lastSize.X < 760 then "Studio: compra simulada, sem Robux."
-				else "Studio: compra simulada; nenhum Robux cobrado. Progresso não salva.")
-			elseif purchaseMode == "disabled" then "Perfil de teste com DataStore: compras simuladas desativadas."
+				then "Studio: simulated pass with a temporary profile; no Robux charged."
+				elseif lastSize.X < 760 then "Studio: simulated purchase, no Robux."
+				else "Studio: simulated purchase; no Robux charged. Progress is not saved.")
+			elseif purchaseMode == "disabled" then "Test profile with DataStore: simulated purchases are disabled."
 			elseif unavailableOffer then (if lastSize.X < 760
-				then "*Robux previsto; venda não ativa."
-				else "*Preço previsto; compras indisponíveis até ativar os produtos no Roblox.")
+				then "*Estimated Robux price; sale inactive."
+				else "*Estimated price; purchases unavailable until products are enabled on Roblox.")
 			else (if lastSize.X < 760
-				then "Robux confirmado pelo Roblox."
-				else "Preço Robux confirmado pelo Roblox. A plataforma confirma cada compra.")
+				then "Robux price confirmed by Roblox."
+				else "Robux price confirmed by Roblox. The platform verifies each purchase.")
 		for name, tab in tabs do
 			local selected = name == selectedTab
 			tab.BackgroundColor3 = if selected then Theme.Spotlight else Theme.Stage
@@ -682,7 +682,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			end
 			local owned = ready and reward.ownedThemes[theme.id] == true
 			row.fichas.Visible = theme.fichas >= 0 and not owned
-			row.fichas.Text = `{theme.fichas} FICHAS`
+			row.fichas.Text = `{theme.fichas} TICKETS`
 			row.fichas.Active = ready and fichas >= theme.fichas
 			row.fichas.BackgroundColor3 = if row.fichas.Active then Theme.Stage else Theme.Disabled
 			row.fichas.TextColor3 = if row.fichas.Active then Theme.White else Theme.Muted
@@ -696,14 +696,14 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			row.robux.BackgroundColor3 = if row.robux.Active then Theme.Burgundy else Theme.Disabled
 			row.robux.TextColor3 = if row.robux.Active then Theme.White else Theme.Muted
 			row.equip.Visible = owned
-			row.equip.Text = if ready and reward.equippedTheme == theme.id then "EQUIPADO" else "EQUIPAR"
+			row.equip.Text = if ready and reward.equippedTheme == theme.id then "EQUIPPED" else "EQUIP"
 			row.equip.Active = owned and reward.equippedTheme ~= theme.id
 			row.detail.Text = if owned
-				then "Na sua coleção"
-				elseif theme.fichas < 0 then "Exclusivo Robux · permanente"
-				else "Jogue para ganhar ou compre"
+				then "In your collection"
+				elseif theme.fichas < 0 then "Robux exclusive · permanent"
+				else "Earn by playing or buy now"
 		end
-		powerRow.stock.Text = `NO ESTOQUE: {if ready then reward.suborns else 0}`
+		powerRow.stock.Text = `IN STOCK: {if ready then reward.suborns else 0}`
 		powerRow.fichas.Active = ready and fichas >= Catalog.SUBORN_FICHAS
 		powerRow.fichas.BackgroundColor3 = if powerRow.fichas.Active then Theme.Stage else Theme.Disabled
 		powerRow.fichas.TextColor3 = if powerRow.fichas.Active then Theme.White else Theme.Muted
