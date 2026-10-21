@@ -77,6 +77,12 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local function fire(verb: string, itemId: string?): ()
 		if remote then remote:FireServer(verb, itemId) end
 	end
+	local function studioPassPurchase(): RemoteEvent?
+		if not RunService:IsStudio() then return nil end
+		local folder = ReplicatedStorage:FindFirstChild("Remotes")
+		local candidate = folder and folder:FindFirstChild("StudioPassPurchase")
+		return if candidate and candidate:IsA("RemoteEvent") then candidate else nil
+	end
 
 	local hud = panel(root, "RewardsHud", DEEP_BLUE, 14, 31)
 	outline(hud, Theme.Spotlight, 2)
@@ -198,9 +204,13 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		if theme.passId <= 0 then message("Compra Robux em preparação."); return end
 		if reward and reward.ownedThemes[theme.id] then message("Você já possui esse tema."); return end
 		if not prices[theme.passId] then message("Preço indisponível. Tente novamente depois."); return end
-		-- Studio treats the creator as owning every pass, so its native prompt says
-		-- "already owned". Simulate the grant on the temporary profile instead.
-		if RunService:IsStudio() then fire("SimulatePass", theme.id); return end
+		-- The Studio project supplies a separate adapter because the creator
+		-- account already owns its passes in Roblox's native purchase prompt.
+		if RunService:IsStudio() then
+			local simulator = studioPassPurchase()
+			if simulator then simulator:FireServer(theme.id) else message("Use studio.project.json para simular passes.") end
+			return
+		end
 		local ok = pcall(function() MarketplaceService:PromptGamePassPurchase(player, theme.passId) end)
 		if not ok then message("Não foi possível abrir a compra agora.") end
 	end
@@ -478,7 +488,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		end
 		commerceNote.Text = if selectedTab == "Convites" then ""
 			elseif RunService:IsStudio() and reward and reward.demo and not unavailableOffer then
-				(if selectedTab == "Cartelas" then "Studio: passe simulado no perfil temporário; nenhum Robux cobrado."
+				(if selectedTab == "Cartelas" and not studioPassPurchase() then "Studio: use studio.project.json para simular passes."
+					elseif selectedTab == "Cartelas" then "Studio: passe simulado no perfil temporário; nenhum Robux cobrado."
 					elseif lastSize.X < 760 then "Studio: compra simulada, sem Robux."
 					else "Studio: compra simulada; nenhum Robux cobrado. Progresso não salva.")
 			elseif RunService:IsStudio() and reward and not reward.demo then "Studio com DataStore: compras simuladas desativadas."
@@ -509,7 +520,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			row.fichas.TextColor3 = if row.fichas.Active then Theme.White else Theme.Muted
 			row.robux.Visible = not owned
 			row.robux.Text = `{prices[theme.passId] or theme.targetRobux} ROBUX{if prices[theme.passId] then "" else "*"}`
-			row.robux.Active = canPurchase and theme.passId > 0 and prices[theme.passId] ~= nil
+			row.robux.Active = canPurchase and (not RunService:IsStudio() or studioPassPurchase() ~= nil)
+				and theme.passId > 0 and prices[theme.passId] ~= nil
 			row.robux.BackgroundColor3 = if row.robux.Active then Theme.Burgundy else Theme.Disabled
 			row.robux.TextColor3 = if row.robux.Active then Theme.White else Theme.Muted
 			row.equip.Visible = owned
@@ -550,6 +562,11 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		menuOpen = false
 		render()
 	end))
+	if RunService:IsStudio() then
+		table.insert(connections, ReplicatedStorage.DescendantAdded:Connect(function(child: Instance)
+			if child.Name == "StudioPassPurchase" and child:IsA("RemoteEvent") then render() end
+		end))
+	end
 	task.spawn(function()
 		pcall(function() ContentProvider:PreloadAsync(previewArt) end)
 		if alive then render() end

@@ -2,7 +2,7 @@
 
 **Status:** regras de trilha verificadas isoladamente em Studio Edit; Loja inspecionada em desktop e simulação visual de 360 × 640. Cinco assets de cartela carregaram no cliente de Studio. Nove ofertas e nove ícones criados; preços/status/IDs de ícones conferidos pela API. Uma compra simulada do pacote +120 creditou 120 Fichas em memória. Partida multiplayer, DataStore real, demais compras simuladas, compra real e conferência em dispositivo real ainda pendentes.
 
-**Ambientes separados:** com acesso à API **desligado**, o Studio usa perfil temporário e simula compras sem cobrar Robux; usar este ambiente para conferir prompts, recibos e concessão em memória. Com acesso à API **ligado**, usar o DataStore `BingoNoirPlayer_Studio_v1` para conferir persistência de recompensas e compras com Fichas; os prompts simulados ficam bloqueados para não gravar compras fictícias. Para verificar pagamento real e persistência juntos, usar conta de teste no aplicativo Roblox com acesso Playtest restrito. Ver [setup.md](setup.md).
+**Ambientes separados:** com acesso à API **desligado**, o Studio usa perfil temporário e simula compras sem cobrar Robux. Developer Products usam o prompt simulado; passes usam `tests/studio/StudioPassPurchase.server.luau`, montado apenas por `studio.project.json`, porque a conta criadora já possui os passes na plataforma. Com acesso à API **ligado**, usar o DataStore `BingoNoirPlayer_Studio_v1` para conferir persistência de recompensas e compras com Fichas; os prompts simulados ficam bloqueados para não gravar compras fictícias. Para verificar pagamento real e persistência juntos, usar conta de teste no aplicativo Roblox com acesso Playtest restrito. Ver [setup.md](setup.md).
 
 ## Checagens funcionais em Studio
 
@@ -24,6 +24,8 @@
 Verificação isolada em Studio Edit (sem DataStore): módulos foram carregados; dias 1 e 2 avançaram, segunda partida no mesmo dia pagou apenas 7 Fichas de partida por vitória; marcos 7/14/21/28 concederam Estrela/Selo/Dossiê e, na repetição, 50 Fichas. Isso valida as funções puras usadas pela feature, não a integração da partida.
 
 Inspeção visual da Loja: abas Fichas e Cartelas abertas no playtest desktop após reunir saldo, trilha e categorias no topo. A cartela de amostra combina os PNGs publicados com números nativos. O Dossiê Azul apareceu na captura; `ContentProvider:PreloadAsync` devolveu `Success` para Selo do Clube, No Ar e Veludo de Gala, e os cinco `ImageLabel` ficaram `IsLoaded = true` no cliente. O painel também foi inspecionado com contêiner de 360 × 640; isso não substitui emulação de toque/dispositivo. Depois da criação das ofertas, um playtest novo exibiu seus preços reais, o ícone de Punhado/Pacote e todas as cinco cartelas sem botão Equipar no perfil inicial. A compra simulada de Punhado creditou +120 Fichas. Um segundo clique automatizado creditou +800 de outra oferta, então não consideramos a repetição da mesma compra validada; conferir manualmente o fluxo antes de marcar a matriz como concluída.
+
+`UserOwnsGamePassAsync` retornou `true` para os cinco passes da conta criadora no Studio. Antes de mover a simulação para `tests/studio/`, a ação de teste de Dossiê Azul liberou apenas esse tema em memória, ocultou o botão Robux e mostrou Equipar; Estrela de Palco continuou bloqueada. Após a separação, os projetos Rojo de produção e Studio foram compilados. O script de teste na nova montagem ainda precisa ser exercitado no Studio conectado a `studio.project.json`.
 
 ## Usabilidade e produto
 

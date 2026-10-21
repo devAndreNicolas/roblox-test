@@ -1,14 +1,12 @@
 --!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local PlayerData = require(script.Parent.Parent.PlayerData.PlayerDataService)
 local Daily = require(script.Parent.DailyRewardsService)
 local Referral = require(script.Parent.ReferralService)
 local Shop = require(script.Parent.Parent.Shop.ShopService)
 local Inventory = require(script.Parent.Parent.Inventory.InventoryService)
 local Receipt = require(script.Parent.Parent.Monetization.ReceiptService)
-local StudioPurchaseSimulator = if RunService:IsStudio() then require(script.Parent.Parent.Monetization.StudioPurchaseSimulator) else nil
 local Service = {}
 local started = false
 local update: RemoteEvent
@@ -132,11 +130,7 @@ function Service.Start(): ()
 			return
 		end
 		if typeof(itemId) ~= "string" or #itemId > 40 then return end
-		if verb == "SimulatePass" then
-			if not StudioPurchaseSimulator then return end
-			local ok, message = StudioPurchaseSimulator.PurchasePass(player, itemId)
-			Service.Push(player, if ok then message else "Não foi possível simular a compra.")
-		elseif verb == "BuyFichas" then
+		if verb == "BuyFichas" then
 			local ok, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
 				return Shop.Buy(profile, itemId)
 			end)

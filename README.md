@@ -16,6 +16,10 @@ rojo serve
 
 For more help, check out [the Rojo documentation](https://rojo.space/docs).
 
+## Projetos de publicação e de teste
+
+`default.project.json` monta somente `src/` e é o projeto para publicar. Para validar compras de passes no Studio, inicie `rojo serve studio.project.json` e conecte o plugin Rojo a esse servidor. Esse projeto acrescenta `tests/studio/StudioPassPurchase.server.luau`; a versão de publicação não contém esse script. A conta criadora já possui seus próprios passes para a plataforma, então o projeto de teste concede o tema apenas no perfil temporário depois do clique na Loja. Reinicie o playtest após trocar de projeto.
+
 ## Game design
 
 Start with the [SDD overview](docs/SDD.md) or browse the [feature specifications](specs/README.md).
