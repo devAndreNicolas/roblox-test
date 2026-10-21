@@ -10,6 +10,9 @@
     },
 
     "ServerScriptService": {
+      "ProfileStoreAdapter": {
+        "$path": "tests/studio/ProfileStoreAdapter.luau"
+      },
       "Server": {
         "$path": "src/server"
       },

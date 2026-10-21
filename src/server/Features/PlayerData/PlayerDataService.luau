@@ -1,10 +1,9 @@
 --!strict
-local DataStoreService = game:GetService("DataStoreService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
--- Studio uses a separate namespace, so playtests never mutate published player profiles.
-local store = DataStoreService:GetDataStore(if RunService:IsStudio() then "BingoNoirPlayer_Studio_v1" else "BingoNoirPlayer_v1")
+local ServerScriptService = game:GetService("ServerScriptService")
+-- The Studio project mounts a profile adapter at this seam. The publication
+-- project contains only the durable DataStore adapter.
+local adapterModule = ServerScriptService:FindFirstChild("ProfileStoreAdapter") or script.Parent.DataStoreProfileAdapter
+local storage = require(adapterModule)
 local Service = {}
 export type Profile = {
 	schemaVersion: number, revision: number, fichas: number,
@@ -16,8 +15,6 @@ export type Profile = {
 }
 type Mutation = (Profile) -> (boolean, string)
 local cached: {[number]: Profile} = {}
-local demo: {[number]: Profile} = {}
-local demoUsers: {[number]: boolean} = {}
 local unavailable: {[number]: boolean} = {}
 
 local function default(): Profile
@@ -48,26 +45,19 @@ local function normalize(raw: any): Profile
 	data.schemaVersion = 1
 	return data :: Profile
 end
-local function key(userId: number): string return `Player_{userId}` end
 local function applyCache(userId: number, profile: Profile): ()
 	local old = cached[userId]
 	if not old or profile.revision >= old.revision then cached[userId] = profile end
 end
 function Service.Load(player: Player): boolean
 	local userId = player.UserId
-	local ok, raw = pcall(function() return store:GetAsync(key(userId)) end)
+	local ok, raw = storage.Read(userId)
 	if ok then
 		unavailable[userId] = nil
 		applyCache(userId, normalize(raw))
 		return true
 	end
 	warn("[PlayerData] Load failed", userId, raw)
-	if RunService:IsStudio() then
-		demoUsers[userId] = true
-		demo[userId] = demo[userId] or default()
-		applyCache(userId, demo[userId])
-		return true
-	end
 	unavailable[userId] = true
 	return false
 end
@@ -75,34 +65,25 @@ function Service.Get(userId: number): Profile?
 	return cached[userId]
 end
 function Service.RefreshUserId(userId: number): boolean
-	if demoUsers[userId] or demo[userId] then return true end
-	local ok, raw = pcall(function() return store:GetAsync(key(userId)) end)
+	local ok, raw = storage.Read(userId)
 	if not ok then return false end
 	unavailable[userId] = nil
 	applyCache(userId, normalize(raw))
 	return true
 end
-function Service.IsDemo(userId: number): boolean return demoUsers[userId] == true end
+function Service.IsDemo(userId: number): boolean return storage.IsTemporary(userId) end
+function Service.CanGrantReceipt(userId: number): boolean return storage.CanGrantReceipt(userId) end
+function Service.ShouldReconcilePasses(): boolean return storage.ShouldReconcilePasses() end
 function Service.IsAvailable(userId: number): boolean return cached[userId] ~= nil and not unavailable[userId] end
 function Service.MutateUserId(userId: number, mutation: Mutation): (boolean, string, Profile?)
 	if unavailable[userId] then return false, "Perfil indisponível. Tente novamente.", nil end
-	if demoUsers[userId] or demo[userId] then
-		local profile = demo[userId] or default()
-		local changed, message = mutation(profile)
-		if changed then profile.revision += 1 end
-		demo[userId] = profile
-		applyCache(userId, profile)
-		return true, message, profile
-	end
 	local message = "OK"
-	local ok, result = pcall(function()
-		return store:UpdateAsync(key(userId), function(raw: any)
-			local profile = normalize(raw)
-			local changed, nextMessage = mutation(profile)
-			message = nextMessage
-			if changed then profile.revision += 1 end
-			return profile
-		end)
+	local ok, result = storage.Update(userId, function(raw: any)
+		local profile = normalize(raw)
+		local changed, nextMessage = mutation(profile)
+		message = nextMessage
+		if changed then profile.revision += 1 end
+		return profile
 	end)
 	if not ok or typeof(result) ~= "table" then
 		warn("[PlayerData] Mutation failed", userId, result)
@@ -115,6 +96,6 @@ end
 function Service.Forget(player: Player): ()
 	cached[player.UserId] = nil
 	unavailable[player.UserId] = nil
-	demoUsers[player.UserId] = nil
+	storage.Forget(player.UserId)
 end
 return Service
