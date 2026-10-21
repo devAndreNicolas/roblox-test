@@ -9,6 +9,14 @@
       }
     },
 
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$ignoreUnknownInstances": true,
+      "PilotGui": {
+        "$path": "tests/ui-sync-pilot/PilotGui.rbxmx"
+      }
+    },
+
     "ServerScriptService": {
       "RoundSettings": {
         "$path": "tests/studio/RoundSettings.luau"
