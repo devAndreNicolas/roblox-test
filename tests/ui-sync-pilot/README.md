@@ -25,8 +25,9 @@ The Studio-only project maps only `StarterGui.PilotGui` and sets
    selected GUI with Studio's `SerializationService`, convert the temporary
    `.rbxm` to `.rbxmx` with Rojo, and inspect the diff. The temporary binary
    file is not committed.
-4. Reconnect Rojo to the existing Studio project on port 34873. Confirm the
-   edited appearance remains and that there is only one `PilotGui`.
+4. Reconnect Rojo to the server running `studio.project.json`. Confirm the
+   edited appearance remains and that there is only one `PilotGui`. The pilot
+   used port 34874 because the older server on 34873 could not be restarted.
 5. Make a second visual edit and repeat to prove Studio remains the editor.
 
 Do not change the `.rbxmx` while Studio has unexported edits to the same GUI.
@@ -43,3 +44,21 @@ the sync result is wrong.
 
 Report observed results before requesting separate authorization to migrate
 `RewardShopGui`.
+
+## Observed result (2026-10-21)
+
+- Studio serialized the `ScreenGui` to a temporary `.rbxm`; Rojo converted it
+  to the versioned `.rbxmx`. The XML has one `ScreenGui`, nine instances, and
+  no scripts.
+- After connecting the current project on port 34874, a label change in the
+  `.rbxmx` appeared in Studio. The `LocalOnlyMarker` sibling remained and no
+  duplicate `PilotGui` appeared.
+- A panel color edited in Studio exported as an XML diff affecting only that
+  color. A later source-file change synced to Studio and kept the panel color.
+- A second Studio edit to the button color exported as another isolated XML
+  diff and survived the next source-file sync.
+- A title change made in Studio without export was replaced by the next
+  source-file change. This confirms that Studio edits must be exported before
+  the source file is updated.
+- `PilotGui` remains disabled in the game. The temporary marker and `.rbxm`
+  were removed after the test.
