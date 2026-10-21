@@ -138,17 +138,19 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			return
 		end
 		local width = root.AbsoluteSize.X
-		local useArtwork = theme.image ~= "" and artwork.IsLoaded and width >= 240
-		artwork.Visible = useArtwork
+		-- Hidden images may never load. Keep the asset visible while it loads,
+		-- and keep the native frame until the image is ready.
+		artwork.Visible = theme.image ~= ""
+		local useArtwork = artwork.Visible and artwork.IsLoaded and width >= 150
 		border.Enabled = not useArtwork
 		headerBand.Visible = not useArtwork
 		if useArtwork then
-			local inset = math.max(24, math.floor(width * 0.1))
-			local headerY = math.floor(width * 0.14)
-			local gridY = headerY + 34
-			local bottom = math.floor(width * 0.22)
+			local inset = math.max(15, math.floor(width * 0.1))
+			local headerY = math.floor(width * 0.2)
+			local gridY = headerY + (if width < 240 then 22 else 34)
+			local bottom = math.floor(width * (if width < 240 then 0.14 else 0.22))
 			headers.Position = UDim2.fromOffset(inset, headerY)
-			headers.Size = UDim2.new(1, -inset * 2, 0, 28)
+			headers.Size = UDim2.new(1, -inset * 2, 0, if width < 240 then 20 else 28)
 			grid.Position = UDim2.fromOffset(inset, gridY)
 			grid.Size = UDim2.new(1, -inset * 2, 1, -gridY - bottom)
 		else
@@ -158,6 +160,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			grid.Size = UDim2.new(1, -24, 1, -52)
 		end
 		for _, label in headerLabels do
+			label.TextSize = if width < 240 then 12 else 18
 			label.TextColor3 = if useArtwork or theme.id == "on_air" then Theme.Ink else Theme.White
 		end
 	end
@@ -175,6 +178,9 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		card.LayoutTheme()
 	end
 	card.SetTheme("classic")
+	table.insert(connections, root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		card.LayoutTheme()
+	end))
 	table.insert(
 		connections,
 		artwork:GetPropertyChangedSignal("IsLoaded"):Connect(function()

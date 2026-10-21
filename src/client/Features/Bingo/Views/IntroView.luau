@@ -17,11 +17,15 @@ function View.new(parent: Instance, skip: () -> ())
 	local scale = Instance.new("UIScale")
 	scale.Parent = card.Instance
 	local reveal: Tween? = nil
-	local caption = Surface.Panel(root, "Caption", Theme.Paper)
-	local speaker = Surface.Text(caption, "Speaker", 14, Theme.Stage, Theme.Bold)
-	local instruction = Surface.Text(caption, "Instruction", 16)
+	local caption = Surface.Panel(root, "Caption", Theme.Midnight, 10)
+	local captionStroke = Instance.new("UIStroke")
+	captionStroke.Color = Theme.Spotlight
+	captionStroke.Thickness = 2
+	captionStroke.Parent = caption
+	local speaker = Surface.Text(caption, "Speaker", 14, Theme.Spotlight, Theme.Bold)
+	local instruction = Surface.Text(caption, "Instruction", 16, Theme.Paper)
 	local action = Button.new(caption, "Skip scene", skip)
-	local waiting = Surface.Text(caption, "Waiting", 14, Theme.Muted, Theme.Bold)
+	local waiting = Surface.Text(caption, "Waiting", 14, Theme.Spotlight, Theme.Bold)
 	local view = { Instance = root }
 	function view.Layout(width: number, height: number, touch: boolean): ()
 		local portrait = width < height and width < 760

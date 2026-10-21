@@ -78,7 +78,8 @@ function Service.Start(push: (Player, string?) -> ()): ()
 									return false, "Tema já recebido."
 								end
 								profile.ownedThemes[theme.id] = true
-								return true, `Comprou {theme.name}!`
+								profile.equippedTheme = theme.id
+								return true, `Comprou e equipou {theme.name}!`
 							end
 						)
 						if saved then

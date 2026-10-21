@@ -13,14 +13,18 @@ function View.new(parent: Instance, skip: () -> ())
 	root.BackgroundTransparency = 1
 	root.Size = UDim2.fromScale(1, 1)
 	root.Parent = parent
-	local panel = Surface.Panel(root, "Outcome", Theme.Paper)
+	local panel = Surface.Panel(root, "Outcome", Theme.Midnight, 12)
+	local border = Instance.new("UIStroke")
+	border.Color = Theme.Spotlight
+	border.Thickness = 3
+	border.Parent = panel
 	local scale = Instance.new("UIScale")
 	scale.Parent = panel
 	local reveal: Tween? = nil
 	local lastMatchId: number? = nil
-	local eyebrow = Surface.Text(panel, "Eyebrow", 14, Theme.Stage, Theme.Bold)
-	local title = Surface.Text(panel, "Title", 30, Theme.Ink, Theme.Display)
-	local detail = Surface.Text(panel, "Detail", 16)
+	local eyebrow = Surface.Text(panel, "Eyebrow", 14, Theme.Spotlight, Theme.Bold)
+	local title = Surface.Text(panel, "Title", 30, Theme.Paper, Theme.Display)
+	local detail = Surface.Text(panel, "Detail", 16, Theme.Paper)
 	local action = Button.new(panel, "Skip scene", skip)
 	local view = { Instance = root }
 	function view.Layout(width: number, height: number, touch: boolean): ()
@@ -62,7 +66,7 @@ function View.new(parent: Instance, skip: () -> ())
 			then "No full card this time"
 			elseif ownWin then "BINGO! You won!"
 			else (if result then result.winnerName or "A player" else "A player") .. " got Bingo!"
-		title.TextColor3 = if ownWin then Theme.Mark else Theme.Ink
+		title.TextColor3 = if ownWin then Theme.Spotlight else Theme.Paper
 		detail.Text = model.detail
 		action.Instance.Visible = model.sceneActive
 	end

@@ -28,7 +28,8 @@ remote.OnServerEvent:Connect(function(player: Player, themeId: unknown)
 			return false, "Você já possui esse tema."
 		end
 		profile.ownedThemes[themeId] = true
-		return true, `Compra simulada: {theme.name}!`
+		profile.equippedTheme = themeId
+		return true, `Compra simulada: {theme.name} equipado!`
 	end)
 	if ok then
 		Rewards.Push(player, message)

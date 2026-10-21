@@ -15,9 +15,14 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	root.Size = UDim2.fromScale(1, 1)
 	root.Parent = parent
 	local call = Surface.Panel(root, "Call", Theme.Ink)
+	local callStroke = Instance.new("UIStroke")
+	callStroke.Color = Theme.Spotlight
+	callStroke.Thickness = 2
+	callStroke.Transparency = 0.25
+	callStroke.Parent = call
 	local ball = Ball.new(call)
-	local caption = Surface.Text(call, "Caption", 14, Theme.Paper, Theme.Bold)
-	caption.Text = "CALLED NUMBER"
+	local caption = Surface.Text(call, "Caption", 13, Theme.Spotlight, Theme.Bold)
+	caption.Text = "● AO VIVO  /  NÚMERO DA VEZ"
 	local timing = Surface.Text(call, "Timing", 16, Theme.White)
 	local progressBack = Surface.Panel(call, "Track", Theme.Muted, 4)
 	local progress = Surface.Panel(progressBack, "Progress", Theme.Spotlight, 4)
@@ -27,6 +32,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	local history = Surface.Text(root, "History", 14, Theme.Paper, Theme.Bold)
 	local reminder = Surface.Text(root, "Reminder", 16, Theme.Paper)
 	local historyPanel = Surface.Panel(root, "HistorySurface", Theme.Ink, 12)
+	local historyAccent = Surface.Panel(historyPanel, "GoldRule", Theme.Spotlight, 0)
 	history.Parent = historyPanel
 	reminder.Parent = historyPanel
 	local subornPanel = Surface.Panel(root, "SubornAnnouncement", Theme.Burgundy, 14)
@@ -51,7 +57,8 @@ function View.new(parent: Instance, onMark: (number) -> ())
 			Surface.Rect(call, left, 20, info, 108)
 			Surface.Rect(historyPanel, left, math.max(140, height - 164), info, math.min(132, height - 196))
 			race.Layout(left, 142, info, if height >= 460 then 150 else 118, false, height)
-			Surface.Rect(history, 12, 8, info - 24, 40)
+			Surface.Rect(historyAccent, 0, 0, info, 3)
+			Surface.Rect(history, 12, 11, info - 24, 40)
 			Surface.Rect(reminder, 12, 52, info - 24, 64)
 		else
 			local bottom = if touch then 114 else 80
@@ -62,7 +69,8 @@ function View.new(parent: Instance, onMark: (number) -> ())
 			Surface.Rect(call, left, 12, cw, 76)
 			Surface.Rect(card.Instance, left, 100, cw, cw + 32)
 			Surface.Rect(historyPanel, left, 140 + cw, cw, 60)
-			Surface.Rect(history, 10, 4, cw - 20, 20)
+			Surface.Rect(historyAccent, 0, 0, cw, 3)
+			Surface.Rect(history, 10, 6, cw - 20, 20)
 			Surface.Rect(reminder, 10, 25, cw - 20, 32)
 			race.Layout(left, (if showHistory then 204 else 140) + cw, cw, 52, true, height)
 		end
@@ -98,7 +106,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 				`{snapshot.subornBuyerName or "Um jogador"} escolheu a próxima chamada. Todos podem marcar; ninguém marca automaticamente.`
 		end
 		ball.Render(if announcing then snapshot.subornNumber else snapshot.lastCalledNumber)
-		timing.Text = if announcing then "Próxima chamada para todos" else `Auto call in {model.seconds}s`
+		timing.Text = if announcing then "Próxima chamada para todos" else `Próxima chamada em {model.seconds}s`
 		progress.Size =
 			UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
 		local called: { [number]: boolean } = {}

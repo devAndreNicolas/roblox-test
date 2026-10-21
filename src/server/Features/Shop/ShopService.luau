@@ -21,6 +21,7 @@ function Service.Buy(profile: any, itemId: string): (boolean, string)
 		return false, "Fichas insuficientes."
 	end
 	profile.ownedThemes[itemId] = true
-	return true, `Comprou {theme.name}!`
+	profile.equippedTheme = itemId
+	return true, `Comprou e equipou {theme.name}!`
 end
 return Service

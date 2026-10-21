@@ -2,6 +2,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalog = require(ReplicatedStorage.Shared.Features.RewardsShop.RewardCatalog)
 local Types = require(ReplicatedStorage.Shared.Features.Bingo.BingoTypes)
+local BingoCard = require(script.Parent.Parent.Bingo.Components.BingoCard)
 local PlatformAdapter = require(script.Parent.RewardShopPlatformAdapter)
 local UI = script.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
@@ -267,6 +268,43 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		45
 	)
 
+	-- The showcase uses the same card module as the match. A theme shown here
+	-- therefore has the same frame, numbers and marked states in play.
+	local showcase = entry("Cartelas", "theme_showcase", 0, 238, DEEP_BLUE)
+	outline(showcase.frame, Theme.Spotlight, 2)
+	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end)
+	local sampleCells: { Types.CardCell } = {}
+	for index, number in PREVIEW_NUMBERS do
+		sampleCells[index] = { number = number, isFree = number == 0, isMarked = index == 2 or index == 9 }
+	end
+	showcaseCard.Render(sampleCells, "preview", {})
+	local showcaseEyebrow = label(showcase.frame, "Eyebrow", "PRÉVIA NA PARTIDA", 12, SOFT_GOLD, Theme.Bold, 45)
+	local showcaseName = label(showcase.frame, "Name", "", 29, Theme.Paper, Theme.Display, 45)
+	local showcaseCopy = label(showcase.frame, "Copy", "Moldura real da partida. Os números mudam a cada rodada.", 16, Theme.Paper, Theme.Body, 45)
+	local showcaseStatus = label(showcase.frame, "Status", "", 13, SOFT_GOLD, Theme.Bold, 45)
+	local showcaseAccent = panel(showcase.frame, "Accent", Theme.Spotlight, 0, 44)
+	local selectedThemeId = "dossier_blue"
+	local function showTheme(themeId: string): ()
+		local theme = Catalog.FindTheme(themeId)
+		if not theme then return end
+		selectedThemeId = themeId
+		showcaseCard.SetTheme(themeId)
+		showcaseName.Text = theme.name
+		showcaseAccent.BackgroundColor3 = theme.accent
+		if render then render() end
+	end
+	showTheme(selectedThemeId)
+	local showcaseFichas = button(showcase.frame, "BuyFichas", "", function()
+		fire("BuyFichas", selectedThemeId)
+	end, Theme.Spotlight, 45)
+	local showcaseRobux = button(showcase.frame, "BuyRobux", "", function()
+		local theme = Catalog.FindTheme(selectedThemeId)
+		if theme then promptPass(theme) end
+	end, Theme.Burgundy, 45)
+	local showcaseEquip = button(showcase.frame, "Equip", "EQUIPAR", function()
+		fire("Equip", selectedThemeId)
+	end, Theme.Mark, 45)
+
 	for index, theme in Catalog.THEMES do
 		if theme.id == "classic" then
 			continue
@@ -310,13 +348,20 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		table.insert(previewArt, row.art)
 		row.name = label(row.frame, "Name", theme.name, 20, Theme.Ink, Theme.Bold, 45)
 		row.detail = label(row.frame, "Detail", "Tema permanente da cartela", 12, Theme.Muted, Theme.Body, 45)
+		row.inspect = button(row.frame, "Inspect", "VER NA PARTIDA  ›", function()
+			showTheme(theme.id)
+			scroll.CanvasPosition = Vector2.zero
+		end, Theme.Paper, 45)
 		row.fichas = button(row.frame, "BuyFichas", "", function()
+			showTheme(theme.id)
 			fire("BuyFichas", theme.id)
 		end, Theme.Stage, 45)
 		row.robux = button(row.frame, "BuyRobux", "", function()
+			showTheme(theme.id)
 			promptPass(theme)
 		end, Theme.Burgundy, 45)
 		row.equip = button(row.frame, "Equip", "EQUIPAR", function()
+			showTheme(theme.id)
 			fire("Equip", theme.id)
 		end, Theme.Mark, 45)
 	end
@@ -377,12 +422,12 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		local w = math.min(960, width - 20)
 		local h = math.min(650, height - 20)
 		Surface.Rect(shop, (width - w) / 2, (height - h) / 2, w, h)
-		Surface.Rect(header, 0, 0, w, 75)
-		Surface.Rect(accent, 0, 71, w, 4)
+		Surface.Rect(header, 0, 0, w, 66)
+		Surface.Rect(accent, 0, 62, w, 4)
 		Surface.Rect(masthead, 18, 7, w - 132, 20)
-		Surface.Rect(title, 18, 27, w - 132, 40)
-		Surface.Rect(close, w - 108, 16, 92, 42)
-		Surface.Rect(rail, 16, 87, w - 32, 88)
+		Surface.Rect(title, 18, 23, w - 132, 38)
+		Surface.Rect(close, w - 108, 12, 92, 40)
+		Surface.Rect(rail, 16, 76, w - 32, 80)
 		local summaryWidth = w - 32
 		local half = math.floor(summaryWidth / 2)
 		balanceUnit.Visible = false
@@ -400,22 +445,40 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 				Surface.Rect(dot, half + 6 + (index - 1) * 26, 74, 19, 7)
 			end
 		end
-		Surface.Rect(nav, 16, 185, w - 32, 44)
+		Surface.Rect(nav, 16, 165, w - 32, 40)
 		local tabWidth = math.floor((w - 32 - 12) / 4)
 		for index, name in { "Fichas", "Cartelas", "Poderes", "Convites" } do
-			Surface.Rect(tabs[name], (index - 1) * (tabWidth + 4), 0, tabWidth, 44)
+			Surface.Rect(tabs[name], (index - 1) * (tabWidth + 4), 0, tabWidth, 40)
 			tabs[name].TextSize = if portrait then 11 else 15
 		end
-		Surface.Rect(sectionTitle, 20, 238, w - 40, 36)
-		Surface.Rect(sectionCopy, 20, 270, w - 40, 21)
-		Surface.Rect(commerceNote, 20, 291, w - 40, 18)
-		Surface.Rect(scroll, 16, 317, w - 32, h - 331)
+		Surface.Rect(sectionTitle, 20, 211, w - 40, 32)
+		Surface.Rect(sectionCopy, 20, 241, w - 40, 19)
+		Surface.Rect(commerceNote, 20, 260, w - 40, 18)
+		Surface.Rect(scroll, 16, 283, w - 32, h - 297)
 		Surface.Rect(notice, 18, h - 56, w - 36, 42)
 		Surface.Rect(noticeText, 8, 2, w - 52, 38)
 		local cardWidth = w - 40
 		for _, row in entries do
 			row.frame.Size = UDim2.new(1, 0, 0, row.height)
 		end
+		local narrowShowcase = cardWidth < 480
+		local showcaseWidth = if narrowShowcase then 154 else 194
+		showcase.frame.Size = UDim2.new(1, 0, 0, if narrowShowcase then 402 else 264)
+		Surface.Rect(showcaseAccent, cardWidth - 8, 0, 8, if narrowShowcase then 402 else 264)
+		Surface.Rect(showcaseCard.Instance, if narrowShowcase then (cardWidth - showcaseWidth) / 2 else 16,
+			if narrowShowcase then 8 else 13, showcaseWidth, showcaseWidth + 32)
+		local showcaseTextX = if narrowShowcase then 16 else showcaseWidth + 36
+		local showcaseTextY = if narrowShowcase then 198 else 30
+		Surface.Rect(showcaseEyebrow, showcaseTextX, showcaseTextY, cardWidth - showcaseTextX - 14, 19)
+		Surface.Rect(showcaseName, showcaseTextX, showcaseTextY + 24, cardWidth - showcaseTextX - 14, 40)
+		Surface.Rect(showcaseCopy, showcaseTextX, showcaseTextY + 69, cardWidth - showcaseTextX - 14, 45)
+		Surface.Rect(showcaseStatus, showcaseTextX, showcaseTextY + 116, cardWidth - showcaseTextX - 14, 25)
+		local actionY = if narrowShowcase then 348 else 185
+		local actionWidth = cardWidth - showcaseTextX - 16
+		Surface.Rect(showcaseFichas, showcaseTextX, actionY, (actionWidth - 8) / 2, 42)
+		Surface.Rect(showcaseRobux, showcaseTextX + (actionWidth + 8) / 2, actionY, (actionWidth - 8) / 2, 42)
+		Surface.Rect(showcaseEquip, showcaseTextX, actionY, actionWidth, 42)
+		showcaseCard.LayoutTheme()
 		for _, pack in Catalog.FICHA_PACKS do
 			local row = entries[pack.id]
 			row.frame.Size = UDim2.new(1, 0, 0, if portrait then 148 else 126)
@@ -467,6 +530,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			local contentX = preview + 22
 			Surface.Rect(row.name, contentX, 10, cardWidth - contentX - 10, 30)
 			Surface.Rect(row.detail, contentX, 42, cardWidth - contentX - 10, 25)
+			Surface.Rect(row.inspect, contentX, 66, cardWidth - contentX - 12, 20)
 			local buyWidth = math.floor((cardWidth - contentX - 18) / 2)
 			Surface.Rect(row.fichas, contentX, if portrait then 95 else 87, buyWidth, 43)
 			Surface.Rect(row.robux, contentX + buyWidth + 6, if portrait then 95 else 87, buyWidth, 43)
@@ -503,6 +567,25 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			else "disabled"
 		local canPurchase = ready and purchaseMode ~= "disabled"
 		local fichas = if ready then reward.fichas else 0
+		local selectedTheme = Catalog.FindTheme(selectedThemeId)
+		local showcaseOwned = selectedTheme ~= nil and ready and reward.ownedThemes[selectedThemeId] == true
+		showcaseFichas.Visible = selectedTheme ~= nil and selectedTheme.fichas >= 0 and not showcaseOwned
+		showcaseFichas.Text = if selectedTheme then `{selectedTheme.fichas} FICHAS` else ""
+		showcaseFichas.Active = selectedTheme ~= nil and ready and fichas >= selectedTheme.fichas
+		showcaseFichas.BackgroundColor3 = if showcaseFichas.Active then Theme.Spotlight else Theme.Disabled
+		showcaseRobux.Visible = not showcaseOwned
+		showcaseRobux.Text = if selectedTheme then `{prices[selectedTheme.passId] or selectedTheme.targetRobux} ROBUX{if prices[selectedTheme.passId] then "" else "*"}` else ""
+		showcaseRobux.Active = selectedTheme ~= nil and canPurchase and selectedTheme.passId > 0
+			and prices[selectedTheme.passId] ~= nil and (purchaseMode ~= "simulated" or platform.HasSimulatedPass())
+		showcaseRobux.BackgroundColor3 = if showcaseRobux.Active then Theme.Burgundy else Theme.Disabled
+		showcaseRobux.TextColor3 = if showcaseRobux.Active then Theme.White else Theme.Muted
+		showcaseEquip.Visible = showcaseOwned
+		showcaseEquip.Text = if ready and reward.equippedTheme == selectedThemeId then "EQUIPADA NA PARTIDA" else "EQUIPAR NA PARTIDA"
+		showcaseEquip.Active = showcaseOwned and reward.equippedTheme ~= selectedThemeId
+		showcaseStatus.Text = if ready and reward.equippedTheme == selectedThemeId
+			then "EQUIPADA PARA A PRÓXIMA PARTIDA"
+			elseif ready and reward.ownedThemes[selectedThemeId] then "NA SUA COLEÇÃO · TOQUE EM EQUIPAR"
+			else "ESCOLHA ESTA CARTELA PARA LEVAR AO PALCO"
 		hudBalance.Text = if ready then `{fichas} FICHAS` else "CARREGANDO"
 		hudDaily.Text = if ready
 			then `MARCO {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
@@ -651,6 +734,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	function menu.Destroy(): ()
 		alive = false
 		platform.Destroy()
+		showcaseCard.Destroy()
 		for _, connection in connections do
 			connection:Disconnect()
 		end
