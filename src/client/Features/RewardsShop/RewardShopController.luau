@@ -96,14 +96,14 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 
 	local hud = panel(root, "RewardsHud", DEEP_BLUE, 14, 31)
 	outline(hud, Theme.Spotlight, 2)
-	local hudBalance = label(hud, "Fichas", "0 FICHAS", 18, Theme.Paper, Theme.Display, 32)
-	local hudDaily = label(hud, "NextReward", "PRÓXIMO MARCO", 11, SOFT_GOLD, Theme.Body, 32)
-	local hudOpen = button(hud, "OpenShop", "ABRIR LOJA", function()
+	local hudBalance = label(hud, "Fichas", "0 TICKETS", 18, Theme.Paper, Theme.Display, 32)
+	local hudDaily = label(hud, "NextReward", "NEXT MILESTONE", 11, SOFT_GOLD, Theme.Body, 32)
+	local hudOpen = button(hud, "OpenShop", "OPEN SHOP", function()
 		menuOpen = true
 		render()
 	end, Theme.Spotlight, 32)
 
-	local power = button(root, "UseSuborn", "SUBORNO DO MC", function()
+	local power = button(root, "UseSuborn", "BRIBE THE MC", function()
 		if
 			reward
 			and reward.ready
@@ -134,20 +134,20 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	shop.Visible = false
 	local header = panel(shop, "Header", Theme.Stage, 0, 42)
 	local accent = panel(header, "GoldRule", Theme.Spotlight, 0, 43)
-	local masthead = label(header, "Masthead", "BINGO NOIR  /  LOJA", 14, SOFT_GOLD, Theme.Display, 44)
-	local title = label(header, "Title", "LOJA DO PALCO", 29, Theme.Paper, Theme.Display, 44)
-	local close = button(header, "CloseShop", "FECHAR  ×", function()
+	local masthead = label(header, "Masthead", "BINGO NOIR  /  SHOP", 14, SOFT_GOLD, Theme.Display, 44)
+	local title = label(header, "Title", "THE STAGE SHOP", 29, Theme.Paper, Theme.Display, 44)
+	local close = button(header, "CloseShop", "CLOSE  ×", function()
 		menuOpen = false
 		render()
 	end, DEEP_BLUE, 44)
 
 	local rail = panel(shop, "Rail", Theme.Paper, 12, 42)
-	local balanceKicker = label(rail, "BalanceKicker", "SEU SALDO", 13, Theme.Burgundy, Theme.Bold, 43)
+	local balanceKicker = label(rail, "BalanceKicker", "YOUR BALANCE", 13, Theme.Burgundy, Theme.Bold, 43)
 	local balance = label(rail, "Balance", "0", 44, Theme.Ink, Theme.Display, 43)
-	local balanceUnit = label(rail, "BalanceUnit", "FICHAS", 16, Theme.Stage, Theme.Display, 43)
-	local dailyKicker = label(rail, "DailyKicker", "PRÓXIMO MARCO", 13, Theme.Burgundy, Theme.Bold, 43)
-	local daily = label(rail, "Daily", "Jogue uma partida hoje", 17, Theme.Ink, Theme.Bold, 43)
-	local dailyNote = label(rail, "DailyNote", "7 marcos · sem perder progresso", 12, Theme.Muted, Theme.Body, 43)
+	local balanceUnit = label(rail, "BalanceUnit", "TICKETS", 16, Theme.Stage, Theme.Display, 43)
+	local dailyKicker = label(rail, "DailyKicker", "NEXT MILESTONE", 13, Theme.Burgundy, Theme.Bold, 43)
+	local daily = label(rail, "Daily", "Play a match today", 17, Theme.Ink, Theme.Bold, 43)
+	local dailyNote = label(rail, "DailyNote", "7 milestones · keep your progress", 12, Theme.Muted, Theme.Body, 43)
 	local dots: { Frame } = {}
 	for index = 1, 7 do
 		local dot = panel(rail, `DailyDot{index}`, Theme.Disabled, 4, 43)
@@ -162,20 +162,21 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	nav.ZIndex = 43
 	nav.Parent = shop
 	local tabs: { [string]: TextButton } = {}
+	local tabLabels = { Fichas = "TICKETS", Cartelas = "CARDS", Poderes = "POWER UPS", Convites = "INVITES" }
 	for _, tab in { "Fichas", "Cartelas", "Poderes", "Convites" } do
-		tabs[tab] = button(nav, tab, string.upper(tab), function()
+		tabs[tab] = button(nav, tab, tabLabels[tab], function()
 			selectedTab = tab
 			scroll.CanvasPosition = Vector2.zero
 			render()
 		end, Theme.Stage, 44)
 	end
 
-	local sectionTitle = label(shop, "SectionTitle", "FICHAS", 30, Theme.Paper, Theme.Display, 43)
-	local sectionCopy = label(shop, "SectionCopy", "Ganhe jogando ou escolha um pacote.", 14, SOFT_GOLD, Theme.Body, 43)
+	local sectionTitle = label(shop, "SectionTitle", "TICKETS", 30, Theme.Paper, Theme.Display, 43)
+	local sectionCopy = label(shop, "SectionCopy", "Earn them by playing or pick a pack.", 14, SOFT_GOLD, Theme.Body, 43)
 	local commerceNote = label(
 		shop,
 		"CommerceNote",
-		"Preços previstos; compras Robux ainda indisponíveis.",
+		"Estimated prices; Robux purchases are not available yet.",
 		12,
 		Theme.Paper,
 		Theme.Body,
@@ -248,20 +249,20 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		row.icon.ZIndex = 45
 		row.icon.Parent = row.frame
 		row.kicker = label(row.frame, "Kicker", string.upper(pack.name), 13, Theme.Burgundy, Theme.Bold, 45)
-		row.amount = label(row.frame, "Amount", `+{pack.amount} FICHAS`, 29, Theme.Ink, Theme.Display, 45)
+		row.amount = label(row.frame, "Amount", `+{pack.amount} TICKETS`, 29, Theme.Ink, Theme.Display, 45)
 		row.detail =
-			label(row.frame, "Detail", "Adicionadas ao seu saldo após a compra.", 12, Theme.Muted, Theme.Body, 45)
-		row.buy = button(row.frame, "BuyRobux", "EM BREVE", function()
+			label(row.frame, "Detail", "Added to your balance after purchase.", 12, Theme.Muted, Theme.Body, 45)
+		row.buy = button(row.frame, "BuyRobux", "COMING SOON", function()
 			promptProduct(pack.productId)
 		end, Theme.Stage, 45)
 		row.productId = pack.productId
 	end
 	local earn = entry("Fichas", "earn", 4, 112, DEEP_BLUE)
-	earn.title = label(earn.frame, "Title", "GANHE NO PALCO", 24, Theme.Paper, Theme.Display, 45)
+	earn.title = label(earn.frame, "Title", "EARN ON STAGE", 24, Theme.Paper, Theme.Display, 45)
 	earn.detail = label(
 		earn.frame,
 		"Detail",
-		"+5 Fichas por partida · +2 ao vencer. O primeiro jogo do dia também avança sua trilha.",
+		"+5 Tickets per match · +2 for a win. Your first match each day advances the reward track.",
 		14,
 		SOFT_GOLD,
 		Theme.Body,
@@ -278,9 +279,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		sampleCells[index] = { number = number, isFree = number == 0, isMarked = index == 2 or index == 9 }
 	end
 	showcaseCard.Render(sampleCells, "preview", {})
-	local showcaseEyebrow = label(showcase.frame, "Eyebrow", "PRÉVIA NA PARTIDA", 12, SOFT_GOLD, Theme.Bold, 45)
+	local showcaseEyebrow = label(showcase.frame, "Eyebrow", "IN GAME PREVIEW", 12, SOFT_GOLD, Theme.Bold, 45)
 	local showcaseName = label(showcase.frame, "Name", "", 29, Theme.Paper, Theme.Display, 45)
-	local showcaseCopy = label(showcase.frame, "Copy", "Moldura real da partida. Os números mudam a cada rodada.", 16, Theme.Paper, Theme.Body, 45)
+	local showcaseCopy = label(showcase.frame, "Copy", "The exact match frame. Numbers change every round.", 16, Theme.Paper, Theme.Body, 45)
 	local showcaseStatus = label(showcase.frame, "Status", "", 13, SOFT_GOLD, Theme.Bold, 45)
 	local showcaseAccent = panel(showcase.frame, "Accent", Theme.Spotlight, 0, 44)
 	local selectedThemeId = "dossier_blue"
@@ -301,7 +302,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		local theme = Catalog.FindTheme(selectedThemeId)
 		if theme then promptPass(theme) end
 	end, Theme.Burgundy, 45)
-	local showcaseEquip = button(showcase.frame, "Equip", "EQUIPAR", function()
+	local showcaseEquip = button(showcase.frame, "Equip", "EQUIP", function()
 		fire("Equip", selectedThemeId)
 	end, Theme.Mark, 45)
 
@@ -347,8 +348,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		row.art.Parent = row.swatch
 		table.insert(previewArt, row.art)
 		row.name = label(row.frame, "Name", theme.name, 20, Theme.Ink, Theme.Bold, 45)
-		row.detail = label(row.frame, "Detail", "Tema permanente da cartela", 12, Theme.Muted, Theme.Body, 45)
-		row.inspect = button(row.frame, "Inspect", "VER NA PARTIDA  ›", function()
+		row.detail = label(row.frame, "Detail", "Permanent card theme", 12, Theme.Muted, Theme.Body, 45)
+		row.inspect = button(row.frame, "Inspect", "SEE IN GAME  ›", function()
 			showTheme(theme.id)
 			scroll.CanvasPosition = Vector2.zero
 		end, Theme.Paper, 45)
@@ -360,7 +361,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			showTheme(theme.id)
 			promptPass(theme)
 		end, Theme.Burgundy, 45)
-		row.equip = button(row.frame, "Equip", "EQUIPAR", function()
+		row.equip = button(row.frame, "Equip", "EQUIP", function()
 			showTheme(theme.id)
 			fire("Equip", theme.id)
 		end, Theme.Mark, 45)
