@@ -6,6 +6,39 @@ local Types = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo
 local Catalog = require(game:GetService("ReplicatedStorage").Shared.Features.RewardsShop.RewardCatalog)
 local TweenService = game:GetService("TweenService")
 local Card = {}
+
+function Card.VisualTheme(themeId: string): (Color3?, Color3?, string?)
+	local design = game:GetService("StarterGui"):FindFirstChild("BingoGuiDesign")
+	if not design then
+		return nil, nil, nil
+	end
+	if themeId == "classic" then
+		local content = design:FindFirstChild("Content")
+		local match = content and content:FindFirstChild("MatchView")
+		local card = match and match:FindFirstChild("BingoCard")
+		if card and card:IsA("Frame") then
+			local header = card:FindFirstChild("ThemeHeader")
+			local artwork = card:FindFirstChild("ThemeArtwork")
+			return if header and header:IsA("Frame") then header.BackgroundColor3 else nil,
+				card.BackgroundColor3,
+				if artwork and artwork:IsA("ImageLabel") then artwork.Image else nil
+		end
+	end
+	local shop = design:FindFirstChild("RewardsShop")
+	local panel = shop and shop:FindFirstChild("ShopPanel")
+	local catalog = panel and panel:FindFirstChild("Catalog")
+	local row = catalog and catalog:FindFirstChild(themeId)
+	local preview = row and row:FindFirstChild("Preview")
+	if preview and preview:IsA("Frame") then
+		local paper = preview:FindFirstChild("Paper")
+		local art = preview:FindFirstChild("ThemeArtwork")
+		return preview.BackgroundColor3,
+			if paper and paper:IsA("Frame") then paper.BackgroundColor3 else nil,
+			if art and art:IsA("ImageLabel") then art.Image else nil
+	end
+	return nil, nil, nil
+end
+
 function Card.new(parent: Instance, intent: (number) -> ())
 	local root = Surface.Panel(parent, "BingoCard", Theme.Paper)
 	local border = Instance.new("UIStroke")
@@ -70,40 +103,71 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	local current: { Types.CardCell }? = nil
 	local mode = "preview"
 	local currentCalled: { [number]: boolean } = {}
+	local design = game:GetService("StarterGui"):FindFirstChild("BingoGuiDesign")
+	local components = design and design:FindFirstChild("Components")
+	local cellTemplate = components and components:FindFirstChild("CardCell")
 	for index = 1, 25 do
-		local button = Instance.new("TextButton")
+		local templateButton = if cellTemplate and cellTemplate:IsA("TextButton") then cellTemplate:Clone() else nil
+		local templateScale = templateButton and templateButton:FindFirstChildOfClass("UIScale")
+		local templateFocus = templateButton and templateButton:FindFirstChildOfClass("UIStroke")
+		local templateStamp = templateButton and templateButton:FindFirstChild("Stamp")
+		local templateGlint = templateButton and templateButton:FindFirstChild("Glint")
+		local validTemplate = templateButton ~= nil
+			and templateScale ~= nil
+			and templateFocus ~= nil
+			and templateStamp ~= nil
+			and templateStamp:IsA("TextLabel")
+			and templateGlint ~= nil
+			and templateGlint:IsA("TextLabel")
+		if templateButton and not validTemplate then
+			templateButton:Destroy()
+		end
+		local button = if validTemplate then templateButton :: TextButton else Instance.new("TextButton")
 		button.Name = `Cell{index}`
 		button.LayoutOrder = index
-		button.BorderSizePixel = 0
-		button.Font = Theme.Bold
-		button.TextSize = 20
-		button.TextColor3 = Theme.Ink
 		button.AutoButtonColor = false
-		button.BackgroundColor3 = Theme.White
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 8)
-		corner.Parent = button
-		local scale = Instance.new("UIScale")
-		scale.Parent = button
+		local scale: UIScale
+		local focus: UIStroke
+		local stamp: TextLabel
+		local glint: TextLabel
+		if validTemplate then
+			button:SetAttribute("StudioCellTemplate", true)
+			scale = templateScale :: UIScale
+			focus = templateFocus :: UIStroke
+			stamp = templateStamp :: TextLabel
+			glint = templateGlint :: TextLabel
+		else
+			button.BorderSizePixel = 0
+			button.Font = Theme.Bold
+			button.TextSize = 20
+			button.TextColor3 = Theme.Ink
+			button.BackgroundColor3 = Theme.White
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 8)
+			corner.Parent = button
+			scale = Instance.new("UIScale")
+			scale.Parent = button
+			focus = Instance.new("UIStroke")
+			focus.Color = Theme.Stage
+			focus.Thickness = 2
+			focus.Parent = button
+			stamp = Surface.Text(button, "Stamp", 14, Theme.White, Theme.Bold)
+			stamp.Text = "✓"
+			stamp.TextXAlignment = Enum.TextXAlignment.Right
+			stamp.Position = UDim2.new(1, -16, 0, 0)
+			stamp.Size = UDim2.fromOffset(14, 16)
+			glint = Surface.Text(button, "Glint", 23, Theme.Spotlight, Theme.Bold)
+			glint.Text = "✦"
+			glint.TextXAlignment = Enum.TextXAlignment.Center
+			glint.Size = UDim2.fromOffset(28, 28)
+			glint.Position = UDim2.new(0.5, -14, 0.5, -14)
+			glint.TextTransparency = 1
+			glint.ZIndex = 5
+		end
 		scales[index] = scale
-		local focus = Instance.new("UIStroke")
-		focus.Color = Theme.Stage
-		focus.Thickness = 2
 		focus.Enabled = false
-		focus.Parent = button
-		local stamp = Surface.Text(button, "Stamp", 14, Theme.White, Theme.Bold)
-		stamp.Text = "✓"
-		stamp.TextXAlignment = Enum.TextXAlignment.Right
-		stamp.Position = UDim2.new(1, -16, 0, 0)
-		stamp.Size = UDim2.fromOffset(14, 16)
 		stamp.Visible = false
-		local glint = Surface.Text(button, "Glint", 23, Theme.Spotlight, Theme.Bold)
-		glint.Text = "✦"
-		glint.TextXAlignment = Enum.TextXAlignment.Center
-		glint.Size = UDim2.fromOffset(28, 28)
-		glint.Position = UDim2.new(0.5, -14, 0.5, -14)
 		glint.TextTransparency = 1
-		glint.ZIndex = 5
 		glints[index] = glint
 		button.Parent = grid
 		buttons[index] = button
@@ -140,7 +204,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		local width = root.AbsoluteSize.X
 		-- Hidden images may never load. Keep the asset visible while it loads,
 		-- and keep the native frame until the image is ready.
-		artwork.Visible = theme.image ~= ""
+		artwork.Visible = artwork.Image ~= ""
 		local useArtwork = artwork.Visible and artwork.IsLoaded and width >= 150
 		border.Enabled = not useArtwork
 		headerBand.Visible = not useArtwork
@@ -170,11 +234,13 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			return
 		end
 		currentThemeId = theme.id
-		root.BackgroundColor3 = theme.paper
-		border.Color = theme.accent
+		root:SetAttribute("CardThemeId", theme.id)
+		local accent, paper, image = Card.VisualTheme(theme.id)
+		root.BackgroundColor3 = paper or theme.paper
+		border.Color = accent or theme.accent
 		border.Thickness = if theme.id == "classic" then 3 else 5
-		headerBand.BackgroundColor3 = theme.accent
-		artwork.Image = theme.image
+		headerBand.BackgroundColor3 = accent or theme.accent
+		artwork.Image = image or theme.image
 		card.LayoutTheme()
 	end
 	card.SetTheme("classic")

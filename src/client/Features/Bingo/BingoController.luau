@@ -1,5 +1,6 @@
 --!strict
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
@@ -7,6 +8,7 @@ local Types = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo
 local UI = script.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Status = require(UI.StatusMessage)
+local VisualDesign = require(UI.VisualDesign)
 local State = require(script.Parent.PresentationState)
 local RemoteClient = require(script.Parent.BingoRemoteClient)
 local Scene = require(script.Parent.ScenePresenter)
@@ -108,6 +110,8 @@ function Controller.Start(): ()
 		intro.SetTheme(themeId)
 		match.SetTheme(themeId)
 	end)
+	local design = StarterGui:FindFirstChild("BingoGuiDesign") or playerGui:WaitForChild("BingoGuiDesign", 5)
+	local visual = if design and design:IsA("ScreenGui") then VisualDesign.new(gui, design) else nil
 	local roots = { Lobby = lobby.Instance, Intro = intro.Instance, Match = match.Instance, Results = results.Instance }
 	render = function(): ()
 		if not alive then
@@ -193,6 +197,9 @@ function Controller.Start(): ()
 			else height - (if touch then 106 else 36)
 		Surface.Rect(status.Instance, x, y, noticeWidth, 30)
 		status.Tick()
+		if visual then
+			visual.Apply()
+		end
 	end
 	remote = RemoteClient.new(function(snapshot: Types.Snapshot)
 		if not alive then
@@ -299,6 +306,9 @@ function Controller.Start(): ()
 		match.Destroy()
 		results.Destroy()
 		status.Destroy()
+		if visual then
+			visual.Destroy()
+		end
 		gui:Destroy()
 	end
 	render()

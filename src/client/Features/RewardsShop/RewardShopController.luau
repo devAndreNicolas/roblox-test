@@ -291,7 +291,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		selectedThemeId = themeId
 		showcaseCard.SetTheme(themeId)
 		showcaseName.Text = theme.name
-		showcaseAccent.BackgroundColor3 = theme.accent
+		local visualAccent = BingoCard.VisualTheme(themeId)
+		showcaseAccent.BackgroundColor3 = visualAccent or theme.accent
 		if render then render() end
 	end
 	showTheme(selectedThemeId)
