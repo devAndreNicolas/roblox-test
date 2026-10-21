@@ -1,6 +1,7 @@
 --!strict
 -- Server-owned backstage, studio, host, queue portal, and participant stations.
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local WORLD_NAME = "BingoWorld"
@@ -70,6 +71,19 @@ local function billboard(
 	height: number,
 	offset: Vector3
 ): TextLabel
+	local templates = ReplicatedStorage:FindFirstChild("WorldGuiTemplates")
+	local template = templates and templates:FindFirstChild(name)
+	if template and template:IsA("BillboardGui") then
+		local label = template:FindFirstChild("Text")
+		if label and label:IsA("TextLabel") then
+			local gui = template:Clone()
+			gui.Adornee = adornee
+			gui.Parent = adornee
+			local liveLabel = gui:FindFirstChild("Text") :: TextLabel
+			liveLabel.Text = message
+			return liveLabel
+		end
+	end
 	local gui = Instance.new("BillboardGui")
 	gui.Name = name
 	gui.Adornee = adornee
@@ -97,6 +111,19 @@ local function billboard(
 end
 
 local function surfaceSign(facePart: BasePart, name: string, message: string): TextLabel
+	local templates = ReplicatedStorage:FindFirstChild("WorldGuiTemplates")
+	local template = templates and templates:FindFirstChild(name)
+	if template and template:IsA("SurfaceGui") then
+		local label = template:FindFirstChild("Text")
+		if label and label:IsA("TextLabel") then
+			local gui = template:Clone()
+			gui.Adornee = facePart
+			gui.Parent = facePart
+			local liveLabel = gui:FindFirstChild("Text") :: TextLabel
+			liveLabel.Text = message
+			return liveLabel
+		end
+	end
 	local gui = Instance.new("SurfaceGui")
 	gui.Name = name
 	gui.Face = Enum.NormalId.Front
@@ -158,15 +185,21 @@ local function createPortal(parent: Folder): (ProximityPrompt, TextLabel)
 	local field =
 		part(model, "QueueField", Vector3.new(8, 7, 0.25), CFrame.new(0, 5.5, -28), AMBER, Enum.Material.ForceField)
 	field.Transparency = 0.8
-	local prompt = Instance.new("ProximityPrompt")
+	local templates = ReplicatedStorage:FindFirstChild("WorldGuiTemplates")
+	local promptTemplate = templates and templates:FindFirstChild("QueuePrompt")
+	local prompt = if promptTemplate and promptTemplate:IsA("ProximityPrompt")
+		then promptTemplate:Clone()
+		else Instance.new("ProximityPrompt")
 	prompt.Name = "QueuePrompt"
-	prompt.ActionText = "Join / leave queue"
-	prompt.ObjectText = "Bingo Noir"
-	prompt.KeyboardKeyCode = Enum.KeyCode.E
-	prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 12
-	prompt.RequiresLineOfSight = false
+	if not (promptTemplate and promptTemplate:IsA("ProximityPrompt")) then
+		prompt.ActionText = "Join / leave queue"
+		prompt.ObjectText = "Bingo Noir"
+		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.GamepadKeyCode = Enum.KeyCode.ButtonX
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 12
+		prompt.RequiresLineOfSight = false
+	end
 	prompt.Parent = field
 	local marquee =
 		part(model, "PortalMarquee", Vector3.new(15, 2.4, 0.3), CFrame.new(0, 12, -28.8), INK, Enum.Material.Metal)
