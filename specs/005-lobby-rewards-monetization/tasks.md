@@ -25,6 +25,7 @@
 - [x] Implementar Developer Product consumível com `ProcessReceipt` idempotente; ativação depende do ID real.
 - [x] Implementar três pacotes de Fichas com crédito atômico por recibo e preço consultado à plataforma; IDs reais configurados na experiência experimental.
 - [x] Permitir compras simuladas no Studio com perfil temporário e impedir que uma simulação seja gravada no DataStore de teste.
+- [x] Separar adaptador de perfil temporário e simulação de passe em `tests/studio/`; excluir ambos de `default.project.json` e bloquear acesso ao perfil real ao abrir o projeto de produção no Studio.
 - [x] Redesenhar a Loja em quatro seções com placa de saldo, trilha, prévias das artes publicadas e layout adaptável.
 - [x] Implementar convite da plataforma, vínculo do primeiro ingresso e prêmio após primeira partida do convidado.
 - [x] Estender a máquina de estados com `SubornAnnouncement`, limite individual/global, chamada compartilhada e recuperação/refund de reserva.

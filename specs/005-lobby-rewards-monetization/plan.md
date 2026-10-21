@@ -52,6 +52,8 @@ Perfil inicial versionado: `schemaVersion`, `revision`, `fichas`, `dailyIndex` (
 
 O protótipo usa DataStore no servidor com chamadas protegidas e escrita atômica via `UpdateAsync` para cada mutação. Não há flush de perfil em cache no fim da sessão: operações concorrentes passam pelo mesmo `UpdateAsync`, inclusive de outro servidor, evitando sobrescrita por snapshot antigo. O cache serve à UI e só aceita revisão igual ou mais nova; pedido periódico de estado atualiza recompensas de convites vindos de outro servidor. Callbacks não podem yield. Cada operação de economia tem identidade deduplicável e commit único; para recibos, `PurchaseId` e concessão ficam na mesma transação. As tabelas de idempotência crescem com o uso; definir política de escala antes de produção ampla sem reabrir recibos antigos.
 
+O perfil usa uma interface pequena de armazenamento (`Read`, `Update`, `PurchaseMode`, `CanGrantReceipt`, `ShouldReconcilePasses`). `default.project.json` monta o adaptador de DataStore real; `studio.project.json` acrescenta o adaptador temporário e a simulação de passe em `tests/studio/`. O projeto publicado não contém scripts de simulação, e o adaptador real recusa acesso quando aberto no Studio sem a montagem de teste. O cliente lê `purchaseMode` do snapshot e só usa o evento opcional de simulação quando o adaptador de teste está presente.
+
 Fluxo de Developer Product:
 
 ```text

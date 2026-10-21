@@ -9,8 +9,11 @@ local Players = game:GetService("Players")
 local State = require(script.Parent.Parent.PresentationState)
 local View = {}
 function View.new(parent: Instance, onMark: (number) -> ())
-	local root = Instance.new("Frame"); root.Name = "MatchView"; root.BackgroundTransparency = 1
-	root.Size = UDim2.fromScale(1, 1); root.Parent = parent
+	local root = Instance.new("Frame")
+	root.Name = "MatchView"
+	root.BackgroundTransparency = 1
+	root.Size = UDim2.fromScale(1, 1)
+	root.Parent = parent
 	local call = Surface.Panel(root, "Call", Theme.Ink)
 	local ball = Ball.new(call)
 	local caption = Surface.Text(call, "Caption", 14, Theme.Paper, Theme.Bold)
@@ -24,14 +27,18 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	local history = Surface.Text(root, "History", 14, Theme.Paper, Theme.Bold)
 	local reminder = Surface.Text(root, "Reminder", 16, Theme.Paper)
 	local historyPanel = Surface.Panel(root, "HistorySurface", Theme.Ink, 12)
-	history.Parent = historyPanel; reminder.Parent = historyPanel
+	history.Parent = historyPanel
+	reminder.Parent = historyPanel
 	local subornPanel = Surface.Panel(root, "SubornAnnouncement", Theme.Burgundy, 14)
-	subornPanel.ZIndex = 12; subornPanel.Visible = false
+	subornPanel.ZIndex = 12
+	subornPanel.Visible = false
 	local subornTitle = Surface.Text(subornPanel, "SubornTitle", 24, Theme.White, Theme.Display)
-	subornTitle.ZIndex = 13; subornTitle.TextXAlignment = Enum.TextXAlignment.Center
+	subornTitle.ZIndex = 13
+	subornTitle.TextXAlignment = Enum.TextXAlignment.Center
 	local subornDetail = Surface.Text(subornPanel, "SubornDetail", 16, Theme.White, Theme.Bold)
-	subornDetail.ZIndex = 13; subornDetail.TextXAlignment = Enum.TextXAlignment.Center
-	local view = {Instance = root}
+	subornDetail.ZIndex = 13
+	subornDetail.TextXAlignment = Enum.TextXAlignment.Center
+	local view = { Instance = root }
 	function view.Layout(width: number, height: number, touch: boolean): ()
 		local horizontal = width > height or width >= 760
 		if horizontal then
@@ -71,9 +78,11 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		Surface.Rect(timing, x, 32, w - x - 10, 26)
 		Surface.Rect(progressBack, x, h - 14, w - x - 12, 4)
 	end
-	function view.Render(model: State.Model, pending: {[number]: number}): ()
+	function view.Render(model: State.Model, pending: { [number]: number }): ()
 		local snapshot = model.snapshot
-		if not snapshot then return end
+		if not snapshot then
+			return
+		end
 		if snapshot.matchId ~= lastMatchId then
 			lastMatchId = snapshot.matchId
 			ball.Render(nil)
@@ -83,15 +92,19 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		subornPanel.Visible = announcing
 		if announcing then
 			local number = snapshot.subornNumber
-			local letter = if number then ({"B", "I", "N", "G", "O"})[math.ceil(number / 15)] else "?"
+			local letter = if number then ({ "B", "I", "N", "G", "O" })[math.ceil(number / 15)] else "?"
 			subornTitle.Text = `O MC foi subornado! {letter}-{number or "?"}`
-			subornDetail.Text = `{snapshot.subornBuyerName or "Um jogador"} escolheu a próxima chamada. Todos podem marcar; ninguém marca automaticamente.`
+			subornDetail.Text =
+				`{snapshot.subornBuyerName or "Um jogador"} escolheu a próxima chamada. Todos podem marcar; ninguém marca automaticamente.`
 		end
 		ball.Render(if announcing then snapshot.subornNumber else snapshot.lastCalledNumber)
 		timing.Text = if announcing then "Próxima chamada para todos" else `Auto call in {model.seconds}s`
-		progress.Size = UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
-		local called: {[number]: boolean} = {}
-		for _, number in snapshot.calledNumbers do called[number] = true end
+		progress.Size =
+			UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
+		local called: { [number]: boolean } = {}
+		for _, number in snapshot.calledNumbers do
+			called[number] = true
+		end
 		card.Render(snapshot.card, if announcing then "preview" else "play", pending, called)
 		race.Render(snapshot.standings, Players.LocalPlayer.UserId)
 		local recent = {}
@@ -105,9 +118,18 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		card.Celebrate(index)
 		race.CelebrateOwn()
 	end
-	function view.CelebrateLead(): () race.CelebrateLead() end
-	function view.SetTheme(themeId: string): () card.SetTheme(themeId) end
-	function view.Destroy(): () card.Destroy(); race.Destroy(); ball.Destroy(); root:Destroy() end
+	function view.CelebrateLead(): ()
+		race.CelebrateLead()
+	end
+	function view.SetTheme(themeId: string): ()
+		card.SetTheme(themeId)
+	end
+	function view.Destroy(): ()
+		card.Destroy()
+		race.Destroy()
+		ball.Destroy()
+		root:Destroy()
+	end
 	return view
 end
 return View

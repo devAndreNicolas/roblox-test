@@ -1,12 +1,8 @@
 --!strict
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local MarketplaceService = game:GetService("MarketplaceService")
-local SocialService = game:GetService("SocialService")
-local ContentProvider = game:GetService("ContentProvider")
-local RunService = game:GetService("RunService")
 local Catalog = require(ReplicatedStorage.Shared.Features.RewardsShop.RewardCatalog)
 local Types = require(ReplicatedStorage.Shared.Features.Bingo.BingoTypes)
+local PlatformAdapter = require(script.Parent.RewardShopPlatformAdapter)
 local UI = script.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
@@ -15,7 +11,8 @@ local ActionButton = require(UI.ActionButton)
 local Controller = {}
 local SOFT_GOLD = Color3.fromRGB(255, 224, 150)
 local DEEP_BLUE = Color3.fromRGB(27, 43, 78)
-local PREVIEW_NUMBERS = {7, 18, 33, 47, 62, 11, 24, 38, 52, 67, 4, 27, 0, 49, 70, 13, 21, 42, 58, 73, 2, 29, 44, 55, 65}
+local PREVIEW_NUMBERS =
+	{ 7, 18, 33, 47, 62, 11, 24, 38, 52, 67, 4, 27, 0, 49, 70, 13, 21, 42, 58, 73, 2, 29, 44, 55, 65 }
 
 local function panel(parent: Instance, name: string, color: Color3, radius: number, z: number): Frame
 	local frame = Surface.Panel(parent, name, color, radius)
@@ -23,7 +20,15 @@ local function panel(parent: Instance, name: string, color: Color3, radius: numb
 	return frame
 end
 
-local function label(parent: Instance, name: string, value: string, size: number, color: Color3, font: Enum.Font, z: number): TextLabel
+local function label(
+	parent: Instance,
+	name: string,
+	value: string,
+	size: number,
+	color: Color3,
+	font: Enum.Font,
+	z: number
+): TextLabel
 	local object = Surface.Text(parent, name, size, color, font)
 	object.Text = value
 	object.ZIndex = z
@@ -39,7 +44,6 @@ local function outline(object: GuiObject, color: Color3, thickness: number): ()
 end
 
 function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
-	local player = Players.LocalPlayer
 	local root = Instance.new("Frame")
 	root.Name = "RewardsShop"
 	root.BackgroundTransparency = 1
@@ -47,22 +51,37 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	root.ZIndex = 30
 	root.Parent = gui
 
-	local connections: {RBXScriptConnection} = {}
-	local buttons: {any} = {}
+	local connections: { RBXScriptConnection } = {}
+	local buttons: { any } = {}
 	local reward: any = nil
 	local bingo: Types.Snapshot? = nil
 	local selectedTab = "Fichas"
 	local menuOpen = false
-	local remote: RemoteEvent? = nil
-	local rewardConnection: RBXScriptConnection? = nil
-	local prices: {[number]: number} = {}
+	local message: (string) -> ()
 	local lastRequest = -math.huge
 	local lastSize = Vector2.zero
 	local alive = true
 	local render: () -> ()
 	local layout: (number, number) -> ()
+	local platform = PlatformAdapter.new(function(payload: any)
+		reward = payload
+		if typeof(payload.message) == "string" and payload.message ~= "" then message(payload.message) end
+		if payload.ready and typeof(payload.equippedTheme) == "string" then onTheme(payload.equippedTheme) end
+		render()
+	end, function() render() end)
+	local prices = platform.Prices
+	local function fire(verb: string, itemId: string?): ()
+		platform.Fire(verb, itemId)
+	end
 
-	local function button(parent: Instance, name: string, value: string, action: () -> (), color: Color3, z: number): TextButton
+	local function button(
+		parent: Instance,
+		name: string,
+		value: string,
+		action: () -> (),
+		color: Color3,
+		z: number
+	): TextButton
 		local component = ActionButton.new(parent, value, action)
 		table.insert(buttons, component)
 		local object = component.Instance
@@ -72,16 +91,6 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		object.TextColor3 = if color == Theme.Spotlight or color == Theme.Paper then Theme.Ink else Theme.White
 		object.TextSize = 15
 		return object
-	end
-
-	local function fire(verb: string, itemId: string?): ()
-		if remote then remote:FireServer(verb, itemId) end
-	end
-	local function studioPassPurchase(): RemoteEvent?
-		if not RunService:IsStudio() then return nil end
-		local folder = ReplicatedStorage:FindFirstChild("Remotes")
-		local candidate = folder and folder:FindFirstChild("StudioPassPurchase")
-		return if candidate and candidate:IsA("RemoteEvent") then candidate else nil
 	end
 
 	local hud = panel(root, "RewardsHud", DEEP_BLUE, 14, 31)
@@ -94,8 +103,17 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	end, Theme.Spotlight, 32)
 
 	local power = button(root, "UseSuborn", "SUBORNO DO MC", function()
-		if reward and reward.ready and bingo and bingo.phase == "CallingNumbers" and reward.suborns > 0
-			and not bingo.hasUsedSuborn and bingo.subornsUsed < 2 then fire("Activate") end
+		if
+			reward
+			and reward.ready
+			and bingo
+			and bingo.phase == "CallingNumbers"
+			and reward.suborns > 0
+			and not bingo.hasUsedSuborn
+			and bingo.subornsUsed < 2
+		then
+			fire("Activate")
+		end
 	end, Theme.Burgundy, 32)
 
 	local shade = Instance.new("TextButton")
@@ -129,7 +147,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local dailyKicker = label(rail, "DailyKicker", "PRÓXIMO MARCO", 13, Theme.Burgundy, Theme.Bold, 43)
 	local daily = label(rail, "Daily", "Jogue uma partida hoje", 17, Theme.Ink, Theme.Bold, 43)
 	local dailyNote = label(rail, "DailyNote", "7 marcos · sem perder progresso", 12, Theme.Muted, Theme.Body, 43)
-	local dots: {Frame} = {}
+	local dots: { Frame } = {}
 	for index = 1, 7 do
 		local dot = panel(rail, `DailyDot{index}`, Theme.Disabled, 4, 43)
 		dots[index] = dot
@@ -142,8 +160,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	nav.BackgroundTransparency = 1
 	nav.ZIndex = 43
 	nav.Parent = shop
-	local tabs: {[string]: TextButton} = {}
-	for _, tab in {"Fichas", "Cartelas", "Poderes", "Convites"} do
+	local tabs: { [string]: TextButton } = {}
+	for _, tab in { "Fichas", "Cartelas", "Poderes", "Convites" } do
 		tabs[tab] = button(nav, tab, string.upper(tab), function()
 			selectedTab = tab
 			scroll.CanvasPosition = Vector2.zero
@@ -153,7 +171,15 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 
 	local sectionTitle = label(shop, "SectionTitle", "FICHAS", 30, Theme.Paper, Theme.Display, 43)
 	local sectionCopy = label(shop, "SectionCopy", "Ganhe jogando ou escolha um pacote.", 14, SOFT_GOLD, Theme.Body, 43)
-	local commerceNote = label(shop, "CommerceNote", "Preços previstos; compras Robux ainda indisponíveis.", 12, Theme.Paper, Theme.Body, 43)
+	local commerceNote = label(
+		shop,
+		"CommerceNote",
+		"Preços previstos; compras Robux ainda indisponíveis.",
+		12,
+		Theme.Paper,
+		Theme.Body,
+		43
+	)
 	scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Catalog"
 	scroll.BackgroundTransparency = 1
@@ -178,50 +204,35 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local noticeText = label(notice, "Text", "", 14, Theme.White, Theme.Bold, 49)
 	noticeText.TextXAlignment = Enum.TextXAlignment.Center
 	local noticeSerial = 0
-	local function message(value: string): ()
-		if value == "" then return end
+	message = function(value: string): ()
+		if value == "" then
+			return
+		end
 		noticeSerial += 1
 		local serial = noticeSerial
 		noticeText.Text = value
 		notice.Visible = true
 		task.delay(4, function()
-			if alive and noticeSerial == serial then notice.Visible = false end
+			if alive and noticeSerial == serial then
+				notice.Visible = false
+			end
 		end)
 	end
 
 	local function promptProduct(productId: number): ()
-		if not reward or not reward.ready then message("Aguarde seu perfil carregar."); return end
-		if RunService:IsStudio() and not reward.demo then message("Teste de compra: desative o DataStore do Studio para usar compras simuladas."); return end
-		if productId <= 0 then message("Compra Robux em preparação."); return end
-		if not prices[productId] then message("Preço indisponível. Tente novamente depois."); return end
-		local ok = pcall(function() MarketplaceService:PromptProductPurchase(player, productId) end)
-		if not ok then message("Não foi possível abrir a compra agora.") end
+		message(platform.PromptProduct(productId, reward) or "")
 	end
-
 	local function promptPass(theme: any): ()
-		if not reward or not reward.ready then message("Aguarde seu perfil carregar."); return end
-		if RunService:IsStudio() and not reward.demo then message("Teste de compra: desative o DataStore do Studio para usar compras simuladas."); return end
-		if theme.passId <= 0 then message("Compra Robux em preparação."); return end
-		if reward and reward.ownedThemes[theme.id] then message("Você já possui esse tema."); return end
-		if not prices[theme.passId] then message("Preço indisponível. Tente novamente depois."); return end
-		-- The Studio project supplies a separate adapter because the creator
-		-- account already owns its passes in Roblox's native purchase prompt.
-		if RunService:IsStudio() then
-			local simulator = studioPassPurchase()
-			if simulator then simulator:FireServer(theme.id) else message("Use studio.project.json para simular passes.") end
-			return
-		end
-		local ok = pcall(function() MarketplaceService:PromptGamePassPurchase(player, theme.passId) end)
-		if not ok then message("Não foi possível abrir a compra agora.") end
+		message(platform.PromptPass(theme, reward) or "")
 	end
 
-	local entries: {[string]: any} = {}
-	local previewArt: {ImageLabel} = {}
+	local entries: { [string]: any } = {}
+	local previewArt: { ImageLabel } = {}
 	local function entry(tab: string, id: string, order: number, height: number, fill: Color3): any
 		local frame = panel(scroll, id, fill, 12, 44)
 		frame.LayoutOrder = order
 		frame.Size = UDim2.new(1, 0, 0, height)
-		local result = {frame = frame, tab = tab, height = height}
+		local result = { frame = frame, tab = tab, height = height }
 		entries[id] = result
 		return result
 	end
@@ -237,16 +248,29 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		row.icon.Parent = row.frame
 		row.kicker = label(row.frame, "Kicker", string.upper(pack.name), 13, Theme.Burgundy, Theme.Bold, 45)
 		row.amount = label(row.frame, "Amount", `+{pack.amount} FICHAS`, 29, Theme.Ink, Theme.Display, 45)
-		row.detail = label(row.frame, "Detail", "Adicionadas ao seu saldo após a compra.", 12, Theme.Muted, Theme.Body, 45)
-		row.buy = button(row.frame, "BuyRobux", "EM BREVE", function() promptProduct(pack.productId) end, Theme.Stage, 45)
+		row.detail =
+			label(row.frame, "Detail", "Adicionadas ao seu saldo após a compra.", 12, Theme.Muted, Theme.Body, 45)
+		row.buy = button(row.frame, "BuyRobux", "EM BREVE", function()
+			promptProduct(pack.productId)
+		end, Theme.Stage, 45)
 		row.productId = pack.productId
 	end
 	local earn = entry("Fichas", "earn", 4, 112, DEEP_BLUE)
 	earn.title = label(earn.frame, "Title", "GANHE NO PALCO", 24, Theme.Paper, Theme.Display, 45)
-	earn.detail = label(earn.frame, "Detail", "+5 Fichas por partida · +2 ao vencer. O primeiro jogo do dia também avança sua trilha.", 14, SOFT_GOLD, Theme.Body, 45)
+	earn.detail = label(
+		earn.frame,
+		"Detail",
+		"+5 Fichas por partida · +2 ao vencer. O primeiro jogo do dia também avança sua trilha.",
+		14,
+		SOFT_GOLD,
+		Theme.Body,
+		45
+	)
 
 	for index, theme in Catalog.THEMES do
-		if theme.id == "classic" then continue end
+		if theme.id == "classic" then
+			continue
+		end
 		local row = entry("Cartelas", theme.id, index, 154, Theme.Paper)
 		row.theme = theme
 		row.swatch = panel(row.frame, "Preview", theme.accent, 9, 45)
@@ -264,7 +288,15 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		sampleLayout.FillDirectionMaxCells = 5
 		sampleLayout.Parent = row.sample
 		for cellIndex, number in PREVIEW_NUMBERS do
-			local digit = label(row.sample, `Number{cellIndex}`, if number == 0 then "★" else tostring(number), 8, theme.accent, Theme.Bold, 47)
+			local digit = label(
+				row.sample,
+				`Number{cellIndex}`,
+				if number == 0 then "★" else tostring(number),
+				8,
+				theme.accent,
+				Theme.Bold,
+				47
+			)
 			digit.TextXAlignment = Enum.TextXAlignment.Center
 			digit.LayoutOrder = cellIndex
 		end
@@ -278,9 +310,15 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		table.insert(previewArt, row.art)
 		row.name = label(row.frame, "Name", theme.name, 20, Theme.Ink, Theme.Bold, 45)
 		row.detail = label(row.frame, "Detail", "Tema permanente da cartela", 12, Theme.Muted, Theme.Body, 45)
-		row.fichas = button(row.frame, "BuyFichas", "", function() fire("BuyFichas", theme.id) end, Theme.Stage, 45)
-		row.robux = button(row.frame, "BuyRobux", "", function() promptPass(theme) end, Theme.Burgundy, 45)
-		row.equip = button(row.frame, "Equip", "EQUIPAR", function() fire("Equip", theme.id) end, Theme.Mark, 45)
+		row.fichas = button(row.frame, "BuyFichas", "", function()
+			fire("BuyFichas", theme.id)
+		end, Theme.Stage, 45)
+		row.robux = button(row.frame, "BuyRobux", "", function()
+			promptPass(theme)
+		end, Theme.Burgundy, 45)
+		row.equip = button(row.frame, "Equip", "EQUIPAR", function()
+			fire("Equip", theme.id)
+		end, Theme.Mark, 45)
 	end
 
 	local powerRow = entry("Poderes", "suborn", 1, 232, Theme.Paper)
@@ -292,53 +330,40 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	powerMark.ZIndex = 45
 	powerMark.Parent = powerRow.frame
 	powerRow.name = label(powerRow.frame, "Name", "SUBORNO DO MC", 26, Theme.Ink, Theme.Display, 45)
-	powerRow.detail = label(powerRow.frame, "Detail", "O MC anuncia um número da sua cartela como próxima chamada para todos. Você ainda precisa marcá-lo.", 14, Theme.Ink, Theme.Body, 45)
-	powerRow.limit = label(powerRow.frame, "Limit", "1 uso por jogador · 2 por partida", 13, Theme.Burgundy, Theme.Bold, 45)
+	powerRow.detail = label(
+		powerRow.frame,
+		"Detail",
+		"O MC anuncia um número da sua cartela como próxima chamada para todos. Você ainda precisa marcá-lo.",
+		14,
+		Theme.Ink,
+		Theme.Body,
+		45
+	)
+	powerRow.limit =
+		label(powerRow.frame, "Limit", "1 uso por jogador · 2 por partida", 13, Theme.Burgundy, Theme.Bold, 45)
 	powerRow.stock = label(powerRow.frame, "Stock", "NO ESTOQUE: 0", 13, Theme.Stage, Theme.Bold, 45)
-	powerRow.fichas = button(powerRow.frame, "BuyFichas", "650 FICHAS", function() fire("BuyFichas", "suborn") end, Theme.Stage, 45)
-	powerRow.robux = button(powerRow.frame, "BuyRobux", "EM BREVE", function() promptProduct(Catalog.SUBORN_PRODUCT_ID) end, Theme.Burgundy, 45)
+	powerRow.fichas = button(powerRow.frame, "BuyFichas", "650 FICHAS", function()
+		fire("BuyFichas", "suborn")
+	end, Theme.Stage, 45)
+	powerRow.robux = button(powerRow.frame, "BuyRobux", "EM BREVE", function()
+		promptProduct(Catalog.SUBORN_PRODUCT_ID)
+	end, Theme.Burgundy, 45)
 
 	local inviteRow = entry("Convites", "invite", 1, 232, Theme.Paper)
 	inviteRow.kicker = label(inviteRow.frame, "Kicker", "UM CONVITE, DOIS PRÊMIOS", 14, Theme.Burgundy, Theme.Bold, 45)
 	inviteRow.name = label(inviteRow.frame, "Name", "SELO DO CLUBE", 29, Theme.Ink, Theme.Display, 45)
-	inviteRow.detail = label(inviteRow.frame, "Detail", "Convide alguém pelo Roblox. Quando essa pessoa concluir a primeira partida, vocês dois recebem o tema Selo do Clube. Se já tiverem o tema, recebem 50 Fichas.", 14, Theme.Ink, Theme.Body, 45)
+	inviteRow.detail = label(
+		inviteRow.frame,
+		"Detail",
+		"Convide alguém pelo Roblox. Quando essa pessoa concluir a primeira partida, vocês dois recebem o tema Selo do Clube. Se já tiverem o tema, recebem 50 Fichas.",
+		14,
+		Theme.Ink,
+		Theme.Body,
+		45
+	)
 	inviteRow.button = button(inviteRow.frame, "SendInvite", "CONVIDAR AMIGO", function()
-		task.spawn(function()
-			local ok, canInvite = pcall(function() return SocialService:CanSendGameInviteAsync(player) end)
-			if not ok or not canInvite then message("Convites indisponíveis neste dispositivo."); return end
-			SocialService:PromptGameInvite(player)
-		end)
+		platform.Invite(message)
 	end, Theme.Burgundy, 45)
-
-	local function discover(): ()
-		if remote then return end
-		local folder = ReplicatedStorage:FindFirstChild("Remotes")
-		local action = folder and folder:FindFirstChild("RewardAction")
-		local update = folder and folder:FindFirstChild("RewardUpdate")
-		if not action or not action:IsA("RemoteEvent") or not update or not update:IsA("RemoteEvent") then return end
-		remote = action
-		rewardConnection = update.OnClientEvent:Connect(function(payload: any)
-			if not alive or typeof(payload) ~= "table" or payload.kind ~= "RewardsSnapshot" then return end
-			reward = payload
-			if typeof(payload.message) == "string" and payload.message ~= "" then message(payload.message) end
-			if payload.ready and typeof(payload.equippedTheme) == "string" then onTheme(payload.equippedTheme) end
-			render()
-		end)
-	end
-
-	local function fetchPrice(productId: number, kind: Enum.InfoType): ()
-		if productId <= 0 then return end
-		task.spawn(function()
-			local ok, info = pcall(function() return MarketplaceService:GetProductInfoAsync(productId, kind) end)
-			if ok and info and typeof(info.PriceInRobux) == "number" and alive then
-				prices[productId] = info.PriceInRobux
-				render()
-			end
-		end)
-	end
-	for _, pack in Catalog.FICHA_PACKS do fetchPrice(pack.productId, Enum.InfoType.Product) end
-	for _, theme in Catalog.THEMES do fetchPrice(theme.passId, Enum.InfoType.GamePass) end
-	fetchPrice(Catalog.SUBORN_PRODUCT_ID, Enum.InfoType.Product)
 
 	layout = function(width: number, height: number): ()
 		lastSize = Vector2.new(width, height)
@@ -371,11 +396,13 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		Surface.Rect(demoNote, 18, 67, half - 24, 17)
 		for index, dot in dots do
 			dot.Visible = not portrait
-			if not portrait then Surface.Rect(dot, half + 6 + (index - 1) * 26, 74, 19, 7) end
+			if not portrait then
+				Surface.Rect(dot, half + 6 + (index - 1) * 26, 74, 19, 7)
+			end
 		end
 		Surface.Rect(nav, 16, 185, w - 32, 44)
 		local tabWidth = math.floor((w - 32 - 12) / 4)
-		for index, name in {"Fichas", "Cartelas", "Poderes", "Convites"} do
+		for index, name in { "Fichas", "Cartelas", "Poderes", "Convites" } do
 			Surface.Rect(tabs[name], (index - 1) * (tabWidth + 4), 0, tabWidth, 44)
 			tabs[name].TextSize = if portrait then 11 else 15
 		end
@@ -391,19 +418,45 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		end
 		for _, pack in Catalog.FICHA_PACKS do
 			local row = entries[pack.id]
-		row.frame.Size = UDim2.new(1, 0, 0, if portrait then 148 else 126)
-		Surface.Rect(row.icon, 14, 17, if portrait then 55 else 82, if portrait then 55 else 82)
-		Surface.Rect(row.kicker, if portrait then 76 else 110, if portrait then 12 else 22, cardWidth - (if portrait then 94 else 280), 20)
-		Surface.Rect(row.amount, if portrait then 76 else 110, if portrait then 34 else 45, cardWidth - (if portrait then 94 else 280), 38)
-		row.amount.TextSize = if portrait then 23 else 29
-		Surface.Rect(row.detail, if portrait then 18 else 110, if portrait then 73 else 87, cardWidth - (if portrait then 36 else 280), 25)
-		Surface.Rect(row.buy, if portrait then 18 else cardWidth - 154, if portrait then 103 else 39, if portrait then cardWidth - 36 else 136, if portrait then 35 else 46)
+			row.frame.Size = UDim2.new(1, 0, 0, if portrait then 148 else 126)
+			Surface.Rect(row.icon, 14, 17, if portrait then 55 else 82, if portrait then 55 else 82)
+			Surface.Rect(
+				row.kicker,
+				if portrait then 76 else 110,
+				if portrait then 12 else 22,
+				cardWidth - (if portrait then 94 else 280),
+				20
+			)
+			Surface.Rect(
+				row.amount,
+				if portrait then 76 else 110,
+				if portrait then 34 else 45,
+				cardWidth - (if portrait then 94 else 280),
+				38
+			)
+			row.amount.TextSize = if portrait then 23 else 29
+			Surface.Rect(
+				row.detail,
+				if portrait then 18 else 110,
+				if portrait then 73 else 87,
+				cardWidth - (if portrait then 36 else 280),
+				25
+			)
+			Surface.Rect(
+				row.buy,
+				if portrait then 18 else cardWidth - 154,
+				if portrait then 103 else 39,
+				if portrait then cardWidth - 36 else 136,
+				if portrait then 35 else 46
+			)
 		end
 		Surface.Rect(earn.title, 18, 10, cardWidth - 36, 36)
 		Surface.Rect(earn.detail, 18, 47, cardWidth - 36, 55)
 		for _, theme in Catalog.THEMES do
 			local row = entries[theme.id]
-			if not row then continue end
+			if not row then
+				continue
+			end
 			local preview = if portrait then 88 else 126
 			row.frame.Size = UDim2.new(1, 0, 0, if portrait then 150 else 148)
 			Surface.Rect(row.swatch, 10, 10, preview, preview)
@@ -433,38 +486,56 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	end
 
 	render = function(): ()
-		if not alive then return end
+		if not alive then
+			return
+		end
 		local isLobby = bingo == nil or not bingo.isParticipant
 		hud.Visible = isLobby
 		power.Visible = bingo ~= nil and bingo.isParticipant and bingo.phase == "CallingNumbers"
-		if not isLobby then menuOpen = false end
+		if not isLobby then
+			menuOpen = false
+		end
 		shade.Visible = menuOpen
 		shop.Visible = menuOpen
 		local ready = reward and reward.ready == true
-		local canPurchase = ready and (not RunService:IsStudio() or reward.demo)
+		local purchaseMode = if ready and typeof(reward.purchaseMode) == "string"
+			then reward.purchaseMode
+			else "disabled"
+		local canPurchase = ready and purchaseMode ~= "disabled"
 		local fichas = if ready then reward.fichas else 0
 		hudBalance.Text = if ready then `{fichas} FICHAS` else "CARREGANDO"
-		hudDaily.Text = if ready then `MARCO {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}` else "AGUARDE"
+		hudDaily.Text = if ready
+			then `MARCO {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
+			else "AGUARDE"
 		balance.Text = if ready then `{fichas} FICHAS` else "—"
 		if ready then
 			local index = reward.dailyIndex + 1
 			daily.Text = `Etapa {index}/7 · +{Catalog.DAILY_FICHAS[index]} Fichas`
 			dailyNote.Text = if reward.dailyReady then "Conclua uma partida hoje" else "Volte amanhã para avançar"
-			for dotIndex, dot in dots do dot.BackgroundColor3 = if dotIndex <= reward.dailyIndex then Theme.Mark else Theme.Disabled end
+			for dotIndex, dot in dots do
+				dot.BackgroundColor3 = if dotIndex <= reward.dailyIndex then Theme.Mark else Theme.Disabled
+			end
 		else
 			daily.Text = "Recompensas indisponíveis"
 			dailyNote.Text = "Tente novamente em instantes"
 		end
-		demoNote.Text = if reward and reward.demo then (if lastSize.X < 760 then "TESTE SEM SALVAR" else "STUDIO: SEM SALVAMENTO")
+		demoNote.Text = if purchaseMode == "simulated"
+			then (if lastSize.X < 760 then "TESTE SEM SALVAR" else "STUDIO: SEM SALVAMENTO")
 			else (if lastSize.X < 760 then "TRILHA SEM RESET" else "A trilha não zera se você faltar.")
-		power.Text = if ready then `SUBORNO ({reward.suborns}) · {if bingo then bingo.subornsUsed else 0}/2` else "SUBORNO DO MC"
-		power.Active = ready and reward.suborns > 0 and bingo ~= nil and not bingo.hasUsedSuborn and bingo.subornsUsed < 2
+		power.Text = if ready
+			then `SUBORNO ({reward.suborns}) · {if bingo then bingo.subornsUsed else 0}/2`
+			else "SUBORNO DO MC"
+		power.Active = ready
+			and reward.suborns > 0
+			and bingo ~= nil
+			and not bingo.hasUsedSuborn
+			and bingo.subornsUsed < 2
 		power.AutoButtonColor = power.Active
 		local copies = {
-			Fichas = {"FICHAS", "Ganhe jogando ou escolha um pacote."},
-			Cartelas = {"CARTELAS", "Temas permanentes para levar ao palco."},
-			Poderes = {"PODERES", "Uma jogada extra, anunciada para todos."},
-			Convites = {"CONVITES", "Seu amigo entra no clube com você."},
+			Fichas = { "FICHAS", "Ganhe jogando ou escolha um pacote." },
+			Cartelas = { "CARTELAS", "Temas permanentes para levar ao palco." },
+			Poderes = { "PODERES", "Uma jogada extra, anunciada para todos." },
+			Convites = { "CONVITES", "Seu amigo entra no clube com você." },
 		}
 		sectionTitle.Text = copies[selectedTab][1]
 		sectionCopy.Text = copies[selectedTab][2]
@@ -486,24 +557,35 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		elseif selectedTab == "Poderes" then
 			unavailableOffer = Catalog.SUBORN_PRODUCT_ID <= 0 or prices[Catalog.SUBORN_PRODUCT_ID] == nil
 		end
-		commerceNote.Text = if selectedTab == "Convites" then ""
-			elseif RunService:IsStudio() and reward and reward.demo and not unavailableOffer then
-				(if selectedTab == "Cartelas" and not studioPassPurchase() then "Studio: use studio.project.json para simular passes."
-					elseif selectedTab == "Cartelas" then "Studio: passe simulado no perfil temporário; nenhum Robux cobrado."
-					elseif lastSize.X < 760 then "Studio: compra simulada, sem Robux."
-					else "Studio: compra simulada; nenhum Robux cobrado. Progresso não salva.")
-			elseif RunService:IsStudio() and reward and not reward.demo then "Studio com DataStore: compras simuladas desativadas."
-			elseif unavailableOffer then (if lastSize.X < 760 then "*Robux previsto; venda não ativa." else "*Preço previsto; compras indisponíveis até ativar os produtos no Roblox.")
-			else (if lastSize.X < 760 then "Robux confirmado pelo Roblox." else "Preço Robux confirmado pelo Roblox. A plataforma confirma cada compra.")
+		commerceNote.Text = if selectedTab == "Convites"
+			then ""
+			elseif purchaseMode == "simulated" and not unavailableOffer then (if selectedTab == "Cartelas"
+					and not platform.HasSimulatedPass()
+				then "Studio: use studio.project.json para simular passes."
+				elseif
+					selectedTab == "Cartelas"
+				then "Studio: passe simulado no perfil temporário; nenhum Robux cobrado."
+				elseif lastSize.X < 760 then "Studio: compra simulada, sem Robux."
+				else "Studio: compra simulada; nenhum Robux cobrado. Progresso não salva.")
+			elseif purchaseMode == "disabled" then "Perfil de teste com DataStore: compras simuladas desativadas."
+			elseif unavailableOffer then (if lastSize.X < 760
+				then "*Robux previsto; venda não ativa."
+				else "*Preço previsto; compras indisponíveis até ativar os produtos no Roblox.")
+			else (if lastSize.X < 760
+				then "Robux confirmado pelo Roblox."
+				else "Preço Robux confirmado pelo Roblox. A plataforma confirma cada compra.")
 		for name, tab in tabs do
 			local selected = name == selectedTab
 			tab.BackgroundColor3 = if selected then Theme.Spotlight else Theme.Stage
 			tab.TextColor3 = if selected then Theme.Ink else Theme.Paper
 		end
-		for _, row in entries do row.frame.Visible = row.tab == selectedTab end
+		for _, row in entries do
+			row.frame.Visible = row.tab == selectedTab
+		end
 		for _, pack in Catalog.FICHA_PACKS do
 			local row = entries[pack.id]
-			row.buy.Text = `{prices[pack.productId] or pack.targetRobux} ROBUX{if prices[pack.productId] then "" else "*"}`
+			row.buy.Text =
+				`{prices[pack.productId] or pack.targetRobux} ROBUX{if prices[pack.productId] then "" else "*"}`
 			row.buy.Active = canPurchase and pack.productId > 0 and prices[pack.productId] ~= nil
 			row.buy.AutoButtonColor = row.buy.Active
 			row.buy.BackgroundColor3 = if row.buy.Active then Theme.Stage else Theme.Disabled
@@ -511,7 +593,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		end
 		for _, theme in Catalog.THEMES do
 			local row = entries[theme.id]
-			if not row then continue end
+			if not row then
+				continue
+			end
 			local owned = ready and reward.ownedThemes[theme.id] == true
 			row.fichas.Visible = theme.fichas >= 0 and not owned
 			row.fichas.Text = `{theme.fichas} FICHAS`
@@ -519,22 +603,33 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			row.fichas.BackgroundColor3 = if row.fichas.Active then Theme.Stage else Theme.Disabled
 			row.fichas.TextColor3 = if row.fichas.Active then Theme.White else Theme.Muted
 			row.robux.Visible = not owned
-			row.robux.Text = `{prices[theme.passId] or theme.targetRobux} ROBUX{if prices[theme.passId] then "" else "*"}`
-			row.robux.Active = canPurchase and (not RunService:IsStudio() or studioPassPurchase() ~= nil)
-				and theme.passId > 0 and prices[theme.passId] ~= nil
+			row.robux.Text =
+				`{prices[theme.passId] or theme.targetRobux} ROBUX{if prices[theme.passId] then "" else "*"}`
+			row.robux.Active = canPurchase
+				and (purchaseMode ~= "simulated" or platform.HasSimulatedPass())
+				and theme.passId > 0
+				and prices[theme.passId] ~= nil
 			row.robux.BackgroundColor3 = if row.robux.Active then Theme.Burgundy else Theme.Disabled
 			row.robux.TextColor3 = if row.robux.Active then Theme.White else Theme.Muted
 			row.equip.Visible = owned
 			row.equip.Text = if ready and reward.equippedTheme == theme.id then "EQUIPADO" else "EQUIPAR"
 			row.equip.Active = owned and reward.equippedTheme ~= theme.id
-			row.detail.Text = if owned then "Na sua coleção" elseif theme.fichas < 0 then "Exclusivo Robux · permanente" else "Jogue para ganhar ou compre"
+			row.detail.Text = if owned
+				then "Na sua coleção"
+				elseif theme.fichas < 0 then "Exclusivo Robux · permanente"
+				else "Jogue para ganhar ou compre"
 		end
 		powerRow.stock.Text = `NO ESTOQUE: {if ready then reward.suborns else 0}`
 		powerRow.fichas.Active = ready and fichas >= Catalog.SUBORN_FICHAS
 		powerRow.fichas.BackgroundColor3 = if powerRow.fichas.Active then Theme.Stage else Theme.Disabled
 		powerRow.fichas.TextColor3 = if powerRow.fichas.Active then Theme.White else Theme.Muted
-		powerRow.robux.Text = `{prices[Catalog.SUBORN_PRODUCT_ID] or Catalog.SUBORN_TARGET_ROBUX} ROBUX{if prices[Catalog.SUBORN_PRODUCT_ID] then "" else "*"}`
-		powerRow.robux.Active = canPurchase and Catalog.SUBORN_PRODUCT_ID > 0 and prices[Catalog.SUBORN_PRODUCT_ID] ~= nil
+		powerRow.robux.Text =
+			`{prices[Catalog.SUBORN_PRODUCT_ID] or Catalog.SUBORN_TARGET_ROBUX} ROBUX{if prices[Catalog.SUBORN_PRODUCT_ID]
+				then ""
+				else "*"}`
+		powerRow.robux.Active = canPurchase
+			and Catalog.SUBORN_PRODUCT_ID > 0
+			and prices[Catalog.SUBORN_PRODUCT_ID] ~= nil
 		powerRow.robux.BackgroundColor3 = if powerRow.robux.Active then Theme.Burgundy else Theme.Disabled
 		powerRow.robux.TextColor3 = if powerRow.robux.Active then Theme.White else Theme.Muted
 	end
@@ -543,34 +638,35 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	function menu.SetContext(snapshot: Types.Snapshot?): ()
 		bingo = snapshot
 		local size = root.AbsoluteSize
-		if size ~= lastSize and size.X > 0 and size.Y > 0 then layout(size.X, size.Y) end
+		if size ~= lastSize and size.X > 0 and size.Y > 0 then
+			layout(size.X, size.Y)
+		end
 		if os.clock() - lastRequest >= (if reward and reward.ready then 30 else 2) then
 			lastRequest = os.clock()
-			discover()
+			platform.Discover()
 			fire("Request")
 		end
 		render()
 	end
 	function menu.Destroy(): ()
 		alive = false
-		if rewardConnection then rewardConnection:Disconnect() end
-		for _, connection in connections do connection:Disconnect() end
-		for _, component in buttons do component.Destroy() end
+		platform.Destroy()
+		for _, connection in connections do
+			connection:Disconnect()
+		end
+		for _, component in buttons do
+			component.Destroy()
+		end
 		root:Destroy()
 	end
-	table.insert(connections, shade.Activated:Connect(function()
-		menuOpen = false
-		render()
-	end))
-	if RunService:IsStudio() then
-		table.insert(connections, ReplicatedStorage.DescendantAdded:Connect(function(child: Instance)
-			if child.Name == "StudioPassPurchase" and child:IsA("RemoteEvent") then render() end
-		end))
-	end
-	task.spawn(function()
-		pcall(function() ContentProvider:PreloadAsync(previewArt) end)
-		if alive then render() end
-	end)
+	table.insert(
+		connections,
+		shade.Activated:Connect(function()
+			menuOpen = false
+			render()
+		end)
+	)
+	platform.Start(previewArt)
 	return menu
 end
 

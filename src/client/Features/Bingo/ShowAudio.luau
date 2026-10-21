@@ -33,9 +33,12 @@ local function makeToggle(parent: Instance, name: string, top: number): TextButt
 	button.ZIndex = 30
 	button.Parent = parent
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 9); corner.Parent = button
+	corner.CornerRadius = UDim.new(0, 9)
+	corner.Parent = button
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Spotlight; stroke.Thickness = 1; stroke.Parent = button
+	stroke.Color = Theme.Spotlight
+	stroke.Thickness = 1
+	stroke.Parent = button
 	return button
 end
 
@@ -64,12 +67,16 @@ function ShowAudio.new(parent: Instance)
 		ducked = true
 		update()
 		task.delay(seconds, function()
-			if not alive or duckVersion ~= version then return end
+			if not alive or duckVersion ~= version then
+				return
+			end
 			ducked = false
 			update()
 		end)
 	end
-	if music.SoundId ~= "" then music:Play() end
+	if music.SoundId ~= "" then
+		music:Play()
+	end
 	update()
 	local musicConnection = musicButton.Activated:Connect(function()
 		musicMuted = not musicMuted
@@ -78,14 +85,20 @@ function ShowAudio.new(parent: Instance)
 	local effectsConnection = effectsButton.Activated:Connect(function()
 		effectsMuted = not effectsMuted
 		if effectsMuted then
-			cueVersion += 1; duckVersion += 1; ducked = false
-			click:Stop(); note:Stop(); flourish:Stop()
+			cueVersion += 1
+			duckVersion += 1
+			ducked = false
+			click:Stop()
+			note:Stop()
+			flourish:Stop()
 		end
 		update()
 	end)
 	local audio = {}
 	function audio.SetParticipant(value: boolean): ()
-		if value == participant then return end
+		if value == participant then
+			return
+		end
 		participant = value
 		update()
 	end
@@ -105,53 +118,80 @@ function ShowAudio.new(parent: Instance)
 		end
 	end
 	function audio.PlayMark(): ()
-		if effectsMuted or not alive then return end
+		if effectsMuted or not alive then
+			return
+		end
 		markCount += 1
 		cueVersion += 1
 		local version = cueVersion
 		duck(0.65)
-		click:Stop(); click:Play()
-		local pitch = ({0.94, 1, 1.06})[(markCount - 1) % 3 + 1] or 1
+		click:Stop()
+		click:Play()
+		local pitch = ({ 0.94, 1, 1.06 })[(markCount - 1) % 3 + 1] or 1
 		note.PlaybackSpeed = pitch
 		task.delay(0.07, function()
-			if not alive or effectsMuted or cueVersion ~= version then return end
-			note:Stop(); note:Play()
+			if not alive or effectsMuted or cueVersion ~= version then
+				return
+			end
+			note:Stop()
+			note:Play()
 		end)
 		task.delay(0.19, function()
-			if not alive or effectsMuted or cueVersion ~= version then return end
+			if not alive or effectsMuted or cueVersion ~= version then
+				return
+			end
 			flourish.PlaybackSpeed = pitch * 1.16
-			flourish:Stop(); flourish:Play()
+			flourish:Stop()
+			flourish:Play()
 		end)
 		task.delay(0.65, function()
-			if not alive or cueVersion ~= version then return end
-			click:Stop(); note:Stop(); flourish:Stop()
+			if not alive or cueVersion ~= version then
+				return
+			end
+			click:Stop()
+			note:Stop()
+			flourish:Stop()
 		end)
 	end
 	function audio.PlayNearWin(oneAway: boolean): ()
-		if effectsMuted or not alive then return end
+		if effectsMuted or not alive then
+			return
+		end
 		cueVersion += 1
 		duck(1.1)
 		flourish.PlaybackSpeed = if oneAway then 1.2 else 1.08
-		flourish:Stop(); flourish:Play()
+		flourish:Stop()
+		flourish:Play()
 	end
 	function audio.PlayWin(): ()
-		if effectsMuted or not alive then return end
+		if effectsMuted or not alive then
+			return
+		end
 		cueVersion += 1
 		duck(1.5)
 		local version = cueVersion
 		note.PlaybackSpeed = 1.12
-		note:Stop(); note:Play()
+		note:Stop()
+		note:Play()
 		task.delay(0.18, function()
-			if not alive or effectsMuted or cueVersion ~= version then return end
+			if not alive or effectsMuted or cueVersion ~= version then
+				return
+			end
 			flourish.PlaybackSpeed = 1.38
-			flourish:Stop(); flourish:Play()
+			flourish:Stop()
+			flourish:Play()
 		end)
 	end
 	function audio.Destroy(): ()
 		alive = false
-		musicConnection:Disconnect(); effectsConnection:Disconnect()
-		music:Destroy(); click:Destroy(); note:Destroy(); flourish:Destroy()
-		musicButton:Destroy(); effectsButton:Destroy()
+		musicConnection:Disconnect()
+		effectsConnection:Disconnect()
+		music:Destroy()
+		click:Destroy()
+		note:Destroy()
+		flourish:Destroy()
+		musicButton:Destroy()
+		effectsButton:Destroy()
 	end
 	return audio
 end

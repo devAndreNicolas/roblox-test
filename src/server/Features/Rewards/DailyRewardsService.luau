@@ -4,13 +4,17 @@ local Economy = require(script.Parent.Parent.Economy.EconomyService)
 local Inventory = require(script.Parent.Parent.Inventory.InventoryService)
 local Service = {}
 function Service.ApplyMatch(profile: any, matchKey: string, won: boolean, utcDay: number): (boolean, string, boolean)
-	if profile.processedMatches[matchKey] then return false, "Recompensa já recebida.", false end
+	if profile.processedMatches[matchKey] then
+		return false, "Recompensa já recebida.", false
+	end
 	profile.processedMatches[matchKey] = true
 	profile.completedMatches += 1
 	local base = Catalog.MATCH_FICHAS + (if won then Catalog.WIN_FICHAS else 0)
 	Economy.Credit(profile, base)
 	local summary = `+{base} Fichas pela partida`
-	if profile.lastDailyDay >= utcDay then return true, summary, profile.completedMatches == 1 end
+	if profile.lastDailyDay >= utcDay then
+		return true, summary, profile.completedMatches == 1
+	end
 	profile.lastDailyDay = utcDay
 	local index = profile.dailyIndex + 1
 	Economy.Credit(profile, Catalog.DAILY_FICHAS[index])

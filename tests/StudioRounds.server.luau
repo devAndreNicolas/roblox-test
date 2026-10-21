@@ -37,18 +37,28 @@ local ok, failure = pcall(function()
 		local state = fast.GetSnapshot(player)
 		if state and state.card then
 			local called = {}
-			for _, number in state.calledNumbers do called[number] = true end
-			for _, cell in state.card do assert(not cell.isMarked or cell.isFree or called[cell.number], "uncalled mark accepted") end
+			for _, number in state.calledNumbers do
+				called[number] = true
+			end
+			for _, cell in state.card do
+				assert(not cell.isMarked or cell.isFree or called[cell.number], "uncalled mark accepted")
+			end
 			if #state.calledNumbers == 75 and lastCallMatch ~= state.matchId then
-				lastCallAt = os.clock(); lastCallMatch = state.matchId
+				lastCallAt = os.clock()
+				lastCallMatch = state.matchId
 			end
 			if state.phase == "RoundComplete" and state.matchId ~= lastMatch then
 				lastMatch = state.matchId
 				assert(state.result ~= nil)
 				assert(state.result.isDraw == (state.matchId == 2), "unexpected winner/draw")
-				if state.result.isDraw then assert(os.clock() - lastCallAt >= 0.12, "last call had no action interval") end
+				if state.result.isDraw then
+					assert(os.clock() - lastCallAt >= 0.12, "last call had no action interval")
+				end
 				assert(state.isFirstMatch == (state.matchId == 1), "tutorial session state incorrect")
-				table.insert(outcomes, {matchId = state.matchId, draw = state.result.isDraw, calls = #state.calledNumbers})
+				table.insert(
+					outcomes,
+					{ matchId = state.matchId, draw = state.result.isDraw, calls = #state.calledNumbers }
+				)
 				session:SetAttribute("CompletedRounds", #outcomes)
 			end
 		end
@@ -56,6 +66,7 @@ local ok, failure = pcall(function()
 	assert(#outcomes == 3, "three rounds did not finish")
 end)
 session:SetAttribute("Stage", "Done")
-public.Destroy(); fast.Destroy()
+public.Destroy()
+fast.Destroy()
 original.Start()
-session:SetAttribute("Result", HttpService:JSONEncode({ok = ok, failure = tostring(failure), outcomes = outcomes}))
+session:SetAttribute("Result", HttpService:JSONEncode({ ok = ok, failure = tostring(failure), outcomes = outcomes }))

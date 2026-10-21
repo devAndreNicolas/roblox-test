@@ -12,17 +12,25 @@ local Rewards = require(Server.Features.Rewards.RewardsService)
 
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local remote = Instance.new("RemoteEvent")
-remote.Name = "StudioPassPurchase"
+remote.Name = "PassPurchaseAdapter"
 remote.Parent = remotes
 
 remote.OnServerEvent:Connect(function(player: Player, themeId: unknown)
-	if not PlayerData.IsDemo(player.UserId) or typeof(themeId) ~= "string" then return end
+	if not PlayerData.IsTemporary(player.UserId) or typeof(themeId) ~= "string" then
+		return
+	end
 	local theme = Catalog.FindTheme(themeId)
-	if not theme or theme.passId <= 0 then return end
+	if not theme or theme.passId <= 0 then
+		return
+	end
 	local ok, message = PlayerData.MutateUserId(player.UserId, function(profile: any): (boolean, string)
-		if profile.ownedThemes[themeId] then return false, "Você já possui esse tema." end
+		if profile.ownedThemes[themeId] then
+			return false, "Você já possui esse tema."
+		end
 		profile.ownedThemes[themeId] = true
 		return true, `Compra simulada: {theme.name}!`
 	end)
-	if ok then Rewards.Push(player, message) end
+	if ok then
+		Rewards.Push(player, message)
+	end
 end)

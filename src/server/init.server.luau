@@ -5,4 +5,6 @@ local RoundService = require(script:WaitForChild("Features"):WaitForChild("Bingo
 local RewardsService = require(script.Features.Rewards.RewardsService)
 
 RewardsService.Start()
-RoundService.Start(RewardsService)
+local settingsModule = script.Parent:FindFirstChild("RoundSettings")
+local roundSettings = if settingsModule and settingsModule:IsA("ModuleScript") then require(settingsModule) else nil
+RoundService.Start(RewardsService, roundSettings)

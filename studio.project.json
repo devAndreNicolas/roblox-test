@@ -10,6 +10,9 @@
     },
 
     "ServerScriptService": {
+      "RoundSettings": {
+        "$path": "tests/studio/RoundSettings.luau"
+      },
       "ProfileStoreAdapter": {
         "$path": "tests/studio/ProfileStoreAdapter.luau"
       },
@@ -23,6 +26,9 @@
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
+        "ShopPurchaseOverride": {
+          "$path": "tests/studio/ShopPurchaseOverride.luau"
+        },
         "Client": {
           "$path": "src/client"
         }

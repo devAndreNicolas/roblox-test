@@ -6,7 +6,9 @@ function Service.Credit(profile: any, amount: number): ()
 end
 function Service.TrySpend(profile: any, amount: number): boolean
 	assert(amount >= 0 and amount % 1 == 0)
-	if profile.fichas < amount then return false end
+	if profile.fichas < amount then
+		return false
+	end
 	profile.fichas -= amount
 	return true
 end
