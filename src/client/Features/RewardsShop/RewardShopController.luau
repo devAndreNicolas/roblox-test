@@ -375,39 +375,39 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	powerMark.ScaleType = Enum.ScaleType.Fit
 	powerMark.ZIndex = 45
 	powerMark.Parent = powerRow.frame
-	powerRow.name = label(powerRow.frame, "Name", "SUBORNO DO MC", 26, Theme.Ink, Theme.Display, 45)
+	powerRow.name = label(powerRow.frame, "Name", "BRIBE THE MC", 26, Theme.Ink, Theme.Display, 45)
 	powerRow.detail = label(
 		powerRow.frame,
 		"Detail",
-		"O MC anuncia um número da sua cartela como próxima chamada para todos. Você ainda precisa marcá-lo.",
+		"The MC calls a number from your card next, for everyone. You still need to mark it yourself.",
 		14,
 		Theme.Ink,
 		Theme.Body,
 		45
 	)
 	powerRow.limit =
-		label(powerRow.frame, "Limit", "1 uso por jogador · 2 por partida", 13, Theme.Burgundy, Theme.Bold, 45)
-	powerRow.stock = label(powerRow.frame, "Stock", "NO ESTOQUE: 0", 13, Theme.Stage, Theme.Bold, 45)
-	powerRow.fichas = button(powerRow.frame, "BuyFichas", "650 FICHAS", function()
+		label(powerRow.frame, "Limit", "1 use per player · 2 per match", 13, Theme.Burgundy, Theme.Bold, 45)
+	powerRow.stock = label(powerRow.frame, "Stock", "IN STOCK: 0", 13, Theme.Stage, Theme.Bold, 45)
+	powerRow.fichas = button(powerRow.frame, "BuyFichas", "650 TICKETS", function()
 		fire("BuyFichas", "suborn")
 	end, Theme.Stage, 45)
-	powerRow.robux = button(powerRow.frame, "BuyRobux", "EM BREVE", function()
+	powerRow.robux = button(powerRow.frame, "BuyRobux", "COMING SOON", function()
 		promptProduct(Catalog.SUBORN_PRODUCT_ID)
 	end, Theme.Burgundy, 45)
 
 	local inviteRow = entry("Convites", "invite", 1, 232, Theme.Paper)
-	inviteRow.kicker = label(inviteRow.frame, "Kicker", "UM CONVITE, DOIS PRÊMIOS", 14, Theme.Burgundy, Theme.Bold, 45)
-	inviteRow.name = label(inviteRow.frame, "Name", "SELO DO CLUBE", 29, Theme.Ink, Theme.Display, 45)
+	inviteRow.kicker = label(inviteRow.frame, "Kicker", "ONE INVITE, TWO REWARDS", 14, Theme.Burgundy, Theme.Bold, 45)
+	inviteRow.name = label(inviteRow.frame, "Name", "CLUB SEAL", 29, Theme.Ink, Theme.Display, 45)
 	inviteRow.detail = label(
 		inviteRow.frame,
 		"Detail",
-		"Convide alguém pelo Roblox. Quando essa pessoa concluir a primeira partida, vocês dois recebem o tema Selo do Clube. Se já tiverem o tema, recebem 50 Fichas.",
+		"Invite a friend through Roblox. When they finish their first match, you both get the Club Seal card theme. If you already own it, you get 50 Tickets.",
 		14,
 		Theme.Ink,
 		Theme.Body,
 		45
 	)
-	inviteRow.button = button(inviteRow.frame, "SendInvite", "CONVIDAR AMIGO", function()
+	inviteRow.button = button(inviteRow.frame, "SendInvite", "INVITE A FRIEND", function()
 		platform.Invite(message)
 	end, Theme.Burgundy, 45)
 
@@ -571,7 +571,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		local selectedTheme = Catalog.FindTheme(selectedThemeId)
 		local showcaseOwned = selectedTheme ~= nil and ready and reward.ownedThemes[selectedThemeId] == true
 		showcaseFichas.Visible = selectedTheme ~= nil and selectedTheme.fichas >= 0 and not showcaseOwned
-		showcaseFichas.Text = if selectedTheme then `{selectedTheme.fichas} FICHAS` else ""
+		showcaseFichas.Text = if selectedTheme then `{selectedTheme.fichas} TICKETS` else ""
 		showcaseFichas.Active = selectedTheme ~= nil and ready and fichas >= selectedTheme.fichas
 		showcaseFichas.BackgroundColor3 = if showcaseFichas.Active then Theme.Spotlight else Theme.Disabled
 		showcaseRobux.Visible = not showcaseOwned
@@ -581,34 +581,34 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		showcaseRobux.BackgroundColor3 = if showcaseRobux.Active then Theme.Burgundy else Theme.Disabled
 		showcaseRobux.TextColor3 = if showcaseRobux.Active then Theme.White else Theme.Muted
 		showcaseEquip.Visible = showcaseOwned
-		showcaseEquip.Text = if ready and reward.equippedTheme == selectedThemeId then "EQUIPADA NA PARTIDA" else "EQUIPAR NA PARTIDA"
+		showcaseEquip.Text = if ready and reward.equippedTheme == selectedThemeId then "EQUIPPED FOR MATCH" else "EQUIP FOR MATCH"
 		showcaseEquip.Active = showcaseOwned and reward.equippedTheme ~= selectedThemeId
 		showcaseStatus.Text = if ready and reward.equippedTheme == selectedThemeId
-			then "EQUIPADA PARA A PRÓXIMA PARTIDA"
-			elseif ready and reward.ownedThemes[selectedThemeId] then "NA SUA COLEÇÃO · TOQUE EM EQUIPAR"
-			else "ESCOLHA ESTA CARTELA PARA LEVAR AO PALCO"
-		hudBalance.Text = if ready then `{fichas} FICHAS` else "CARREGANDO"
+			then "EQUIPPED FOR YOUR NEXT MATCH"
+			elseif ready and reward.ownedThemes[selectedThemeId] then "IN YOUR COLLECTION · TAP EQUIP"
+			else "CHOOSE THIS CARD FOR THE STAGE"
+		hudBalance.Text = if ready then `{fichas} TICKETS` else "LOADING"
 		hudDaily.Text = if ready
-			then `MARCO {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
-			else "AGUARDE"
-		balance.Text = if ready then `{fichas} FICHAS` else "—"
+			then `MILESTONE {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
+			else "PLEASE WAIT"
+		balance.Text = if ready then `{fichas} TICKETS` else "—"
 		if ready then
 			local index = reward.dailyIndex + 1
-			daily.Text = `Etapa {index}/7 · +{Catalog.DAILY_FICHAS[index]} Fichas`
-			dailyNote.Text = if reward.dailyReady then "Conclua uma partida hoje" else "Volte amanhã para avançar"
+			daily.Text = `Step {index}/7 · +{Catalog.DAILY_FICHAS[index]} Tickets`
+			dailyNote.Text = if reward.dailyReady then "Finish a match today" else "Come back tomorrow to advance"
 			for dotIndex, dot in dots do
 				dot.BackgroundColor3 = if dotIndex <= reward.dailyIndex then Theme.Mark else Theme.Disabled
 			end
 		else
-			daily.Text = "Recompensas indisponíveis"
-			dailyNote.Text = "Tente novamente em instantes"
+			daily.Text = "Rewards unavailable"
+			dailyNote.Text = "Please try again shortly"
 		end
 		demoNote.Text = if purchaseMode == "simulated"
-			then (if lastSize.X < 760 then "TESTE SEM SALVAR" else "STUDIO: SEM SALVAMENTO")
-			else (if lastSize.X < 760 then "TRILHA SEM RESET" else "A trilha não zera se você faltar.")
+			then (if lastSize.X < 760 then "NO SAVE IN STUDIO" else "STUDIO: PROGRESS IS NOT SAVED")
+			else (if lastSize.X < 760 then "PROGRESS STAYS" else "Missing a day will not reset your track.")
 		power.Text = if ready
-			then `SUBORNO ({reward.suborns}) · {if bingo then bingo.subornsUsed else 0}/2`
-			else "SUBORNO DO MC"
+			then `BRIBE ({reward.suborns}) · {if bingo then bingo.subornsUsed else 0}/2`
+			else "BRIBE THE MC"
 		power.Active = ready
 			and reward.suborns > 0
 			and bingo ~= nil
@@ -616,10 +616,10 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			and bingo.subornsUsed < 2
 		power.AutoButtonColor = power.Active
 		local copies = {
-			Fichas = { "FICHAS", "Ganhe jogando ou escolha um pacote." },
-			Cartelas = { "CARTELAS", "Temas permanentes para levar ao palco." },
-			Poderes = { "PODERES", "Uma jogada extra, anunciada para todos." },
-			Convites = { "CONVITES", "Seu amigo entra no clube com você." },
+			Fichas = { "TICKETS", "Earn them by playing or pick a pack." },
+			Cartelas = { "CARDS", "Permanent themes for your Bingo card." },
+			Poderes = { "POWER UPS", "A bonus call announced to everyone." },
+			Convites = { "INVITES", "Bring a friend into the club." },
 		}
 		sectionTitle.Text = copies[selectedTab][1]
 		sectionCopy.Text = copies[selectedTab][2]
