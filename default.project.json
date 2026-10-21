@@ -6,6 +6,17 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "WorldGuiTemplates": {
+        "$path": "assets/ui/WorldGuiTemplates.rbxmx"
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$ignoreUnknownInstances": true,
+      "BingoGuiDesign": {
+        "$path": "assets/ui/BingoGuiDesign.rbxmx"
       }
     },
 
