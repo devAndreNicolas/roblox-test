@@ -19,3 +19,5 @@ For more help, check out [the Rojo documentation](https://rojo.space/docs).
 ## Game design
 
 Start with the [SDD overview](docs/SDD.md) or browse the [feature specifications](specs/README.md).
+
+The rewards and monetization prototype is described in [spec 005](specs/005-lobby-rewards-monetization/spec.md). To publish its Robux products and card art, follow the [configuration checklist](specs/005-lobby-rewards-monetization/setup.md).

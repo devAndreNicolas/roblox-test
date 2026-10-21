@@ -1,5 +1,5 @@
 --!strict
-export type Phase = "LobbyWaiting" | "LobbyCountdown" | "MatchIntro" | "CallingNumbers" | "RoundComplete"
+export type Phase = "LobbyWaiting" | "LobbyCountdown" | "MatchIntro" | "CallingNumbers" | "SubornAnnouncement" | "RoundComplete"
 export type CardCell = { number: number, isFree: boolean, isMarked: boolean }
 export type Result = { isDraw: boolean, winnerUserId: number?, winnerName: string? }
 export type NoticeKind = "success" | "error" | "info"
@@ -11,6 +11,7 @@ export type Snapshot = {
 	callIntervalSeconds: number, phaseDurationSeconds: number,
 	isParticipant: boolean, isQueued: boolean, isQueuedForCurrentMatch: boolean, isFirstMatch: boolean,
 	card: {CardCell}?, calledNumbers: {number}, lastCalledNumber: number?,
+	subornNumber: number?, subornBuyerName: string?, subornsUsed: number, hasUsedSuborn: boolean,
 	standings: {Standing}?,
 	result: Result?, notice: Notice?,
 }

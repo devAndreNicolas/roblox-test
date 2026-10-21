@@ -3,10 +3,22 @@ local UI = script.Parent.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local Types = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo.BingoTypes)
+local Catalog = require(game:GetService("ReplicatedStorage").Shared.Features.RewardsShop.RewardCatalog)
 local TweenService = game:GetService("TweenService")
 local Card = {}
 function Card.new(parent: Instance, intent: (number) -> ())
 	local root = Surface.Panel(parent, "BingoCard", Theme.Paper)
+	local border = Instance.new("UIStroke")
+	border.Color = Theme.Stage; border.Thickness = 3; border.Parent = root
+	local artwork = Instance.new("ImageLabel")
+	artwork.Name = "ThemeArtwork"; artwork.BackgroundTransparency = 1
+	artwork.Size = UDim2.fromScale(1, 1); artwork.Visible = false; artwork.Parent = root
+	local headerBand = Instance.new("Frame")
+	headerBand.Name = "ThemeHeader"; headerBand.BorderSizePixel = 0
+	headerBand.Position = UDim2.fromOffset(4, 4); headerBand.Size = UDim2.new(1, -8, 0, 34)
+	headerBand.BackgroundColor3 = Theme.Stage; headerBand.Parent = root
+	local bandCorner = Instance.new("UICorner")
+	bandCorner.CornerRadius = UDim.new(0, 10); bandCorner.Parent = headerBand
 	local headers = Instance.new("Frame")
 	headers.Name = "Columns"; headers.BackgroundTransparency = 1
 	headers.Position = UDim2.fromOffset(12, 8); headers.Size = UDim2.new(1, -24, 0, 28); headers.Parent = root
@@ -14,9 +26,11 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	headerLayout.CellSize = UDim2.new(0.2, -5, 1, 0); headerLayout.CellPadding = UDim2.fromOffset(6, 0)
 	headerLayout.FillDirectionMaxCells = 5
 	headerLayout.SortOrder = Enum.SortOrder.LayoutOrder; headerLayout.Parent = headers
+	local headerLabels: {TextLabel} = {}
 	for index, letter in {"B", "I", "N", "G", "O"} do
-		local label = Surface.Text(headers, letter, 18, Theme.Stage, Theme.Display)
+		local label = Surface.Text(headers, letter, 18, Theme.White, Theme.Display)
 		label.Text = letter; label.TextXAlignment = Enum.TextXAlignment.Center; label.LayoutOrder = index
+		headerLabels[index] = label
 	end
 	local grid = Instance.new("Frame")
 	grid.Name = "Cells"; grid.BackgroundTransparency = 1
@@ -60,6 +74,49 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		table.insert(connections, button.SelectionLost:Connect(function() focus.Enabled = false end))
 	end
 	local card = {Instance = root}
+	local currentThemeId = "classic"
+	function card.LayoutTheme(): ()
+		local theme = Catalog.FindTheme(currentThemeId) or Catalog.FindTheme("classic")
+		if not theme then return end
+		local width = root.AbsoluteSize.X
+		local useArtwork = theme.image ~= "" and artwork.IsLoaded and width >= 240
+		artwork.Visible = useArtwork
+		border.Enabled = not useArtwork
+		headerBand.Visible = not useArtwork
+		if useArtwork then
+			local inset = math.max(24, math.floor(width * 0.1))
+			local headerY = math.floor(width * 0.14)
+			local gridY = headerY + 34
+			local bottom = math.floor(width * 0.22)
+			headers.Position = UDim2.fromOffset(inset, headerY)
+			headers.Size = UDim2.new(1, -inset * 2, 0, 28)
+			grid.Position = UDim2.fromOffset(inset, gridY)
+			grid.Size = UDim2.new(1, -inset * 2, 1, -gridY - bottom)
+		else
+			headers.Position = UDim2.fromOffset(12, 8)
+			headers.Size = UDim2.new(1, -24, 0, 28)
+			grid.Position = UDim2.fromOffset(12, 40)
+			grid.Size = UDim2.new(1, -24, 1, -52)
+		end
+		for _, label in headerLabels do
+			label.TextColor3 = if useArtwork or theme.id == "on_air" then Theme.Ink else Theme.White
+		end
+	end
+	function card.SetTheme(themeId: string): ()
+		local theme = Catalog.FindTheme(themeId) or Catalog.FindTheme("classic")
+		if not theme then return end
+		currentThemeId = theme.id
+		root.BackgroundColor3 = theme.paper
+		border.Color = theme.accent
+		border.Thickness = if theme.id == "classic" then 3 else 5
+		headerBand.BackgroundColor3 = theme.accent
+		artwork.Image = theme.image
+		card.LayoutTheme()
+	end
+	card.SetTheme("classic")
+	table.insert(connections, artwork:GetPropertyChangedSignal("IsLoaded"):Connect(function()
+		card.LayoutTheme()
+	end))
 	function card.Celebrate(index: number): ()
 		local button = buttons[index]
 		if not button then return end
@@ -81,6 +138,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 		glintTween:Play()
 	end
 	function card.Render(values: {Types.CardCell}?, nextMode: string, pending: {[number]: number}, called: {[number]: boolean}?): ()
+		card.LayoutTheme()
 		current, mode, currentCalled = values, nextMode, called or {}
 		for index, button in buttons do
 			local cell = values and values[index]

@@ -48,6 +48,11 @@ function State.Derive(snapshot: Types.Snapshot?, completed: {[string]: boolean})
 	elseif s.phase == "CallingNumbers" then
 		model.view = "Match"; model.title = "Your Bingo card"
 		model.detail = "Calls auto-advance. Tap called numbers to mark."
+	elseif s.phase == "SubornAnnouncement" then
+		model.view = "Match"; model.sceneKey = `{s.matchId}:suborn:{s.subornNumber or 0}`
+		model.sceneDuration = math.min(2, s.timeRemaining)
+		model.title = "Suborno do MC"
+		model.detail = "O MC recebeu um Suborno! O próximo número vale para todos."
 	end
 	if model.sceneKey then model.sceneActive = not completed[model.sceneKey] and model.sceneDuration > 0 end
 	return model

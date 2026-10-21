@@ -15,6 +15,7 @@ local Lobby = require(script.Parent.Views.LobbyView)
 local Intro = require(script.Parent.Views.IntroView)
 local Match = require(script.Parent.Views.MatchView)
 local Results = require(script.Parent.Views.ResultsView)
+local RewardsShop = require(script.Parent.Parent.RewardsShop.RewardShopController)
 local Controller = {}
 local cleanup: (() -> ())? = nil
 local SEATED_JUMP_ACTION = "BingoSeatedJump"
@@ -79,12 +80,17 @@ function Controller.Start(): ()
 		render()
 	end)
 	local results = Results.new(root, skip)
+	local rewardMenu = RewardsShop.new(gui, function(themeId: string)
+		intro.SetTheme(themeId)
+		match.SetTheme(themeId)
+	end)
 	local roots = {Lobby = lobby.Instance, Intro = intro.Instance, Match = match.Instance, Results = results.Instance}
 	render = function(): ()
 		if not alive then return end
 		local snapshot = if current then table.clone(current) else nil
 		if snapshot then snapshot.timeRemaining = math.max(0, snapshot.timeRemaining - (os.clock() - receivedAt)) end
 		local model = State.Derive(snapshot, completed)
+		rewardMenu.SetContext(snapshot)
 		local key = model.sceneKey
 		if activeScene ~= key then
 			if activeScene then completed[activeScene] = true end
@@ -202,7 +208,7 @@ function Controller.Start(): ()
 	cleanup = function()
 		alive = false; heartbeat:Disconnect(); remote.Destroy(); scene.Destroy()
 		setJumpBlocked(false); audio.Destroy()
-		lobby.Destroy(); intro.Destroy(); match.Destroy(); results.Destroy(); status.Destroy()
+		rewardMenu.Destroy(); lobby.Destroy(); intro.Destroy(); match.Destroy(); results.Destroy(); status.Destroy()
 		gui:Destroy()
 	end
 	render()

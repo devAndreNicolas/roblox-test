@@ -13,7 +13,7 @@ Current feature folders:
 - [003-fantasy-scenario](003-fantasy-scenario/spec.md) — Bingo Noir: Mistério no Ar backstage and TV studio implemented in source; solo Studio checks recorded, wider validation open.
 - [004-sfx-fantasy-dopamina](004-sfx-fantasy-dopamina/spec.md) — match feedback and Bingo Race implemented in source; solo Studio checks partially recorded, wider validation pending.
 
-- [005-lobby-rewards-monetization](005-lobby-rewards-monetization/spec.md) — draft for approval; defines Fichas, non-punitive daily rewards, referrals, collectible card themes, shop, and bounded gameplay power. Runtime implementation and Studio validation have not started.
+- [005-lobby-rewards-monetization](005-lobby-rewards-monetization/spec.md) — source prototype implemented for Fichas, daily rewards, referrals, card themes, shop, and bounded gameplay power. Five card images and nine Robux offers configured for the experimental experience; purchase and multiplayer verification remain open.
 
 Cross-feature product context:
 

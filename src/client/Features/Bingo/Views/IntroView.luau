@@ -55,6 +55,7 @@ function View.new(parent: Instance, skip: () -> ())
 		waiting.Text = `Starting soon…\n{model.seconds}s`
 		card.Render(snapshot.card, "preview", {})
 	end
+	function view.SetTheme(themeId: string): () card.SetTheme(themeId) end
 	function view.Destroy(): () view.Exit(); action.Destroy(); card.Destroy(); root:Destroy() end
 	return view
 end

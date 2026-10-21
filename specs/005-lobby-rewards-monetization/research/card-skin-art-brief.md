@@ -1,7 +1,9 @@
 # Direção e prompt pack — temas de cartela
 
-**Status:** prancha gerada para revisão de direção; não são os PNGs finais.  
+**Status:** prancha e cinco PNGs individuais de origem gerados; os cinco foram enviados ao Roblox e seus IDs entraram no catálogo. Todos carregaram no cliente de Studio. Ainda é necessário revisar franja interna e confirmar moderação/visibilidade em cliente publicado.
 **Arquivo da prancha:** [`assets/concept-sheet.png`](../../../assets/bingo/card-skins/concept-sheet.png).
+
+**Arquivos individuais:** `assets/bingo/card-skins/source/` contém `dossier_blue.png`, `stage_star.png`, `club_seal.png`, `on_air.png` e `velvet_gala.png`. Todos são PNG RGBA 1254×1254 com centro transparente. A borda interna de alguns ainda mostra uma franja de cor na prévia; revisar sobre a cartela marfim antes de importar.
 
 ## O que o asset faz
 
@@ -35,9 +37,9 @@ Substituir somente `[TEMA E DETALHES]` pela linha correspondente da coleção e 
 ## Processo de produção e integração
 
 1. Revisar primeiro `concept-sheet.png`: avaliar silhueta, unidade da coleção, contraste e se cada tema comunica seu nome. Escolher correções antes de gerar arquivos individuais.
-2. Gerar uma imagem por tema aprovado usando o prompt mestre; pedir alpha real, área central transparente e sem texto. Não cortar a prancha em cinco “assets finais”, porque fundo, escala e enfeites de conceito não têm alpha/layout confiáveis para runtime.
+2. Uma imagem por tema foi gerada com o prompt mestre, alpha real e área central transparente. Os arquivos individuais estão em `source/`; não foram recortados da prancha.
 3. Revisar o alpha sobre a UI marfim e azul-escuro; verificar borda não cortada, celular pequeno e estado de cartela marcado.
-4. Salvar os originais em `assets/bingo/card-skins/source/<id>.png`. Importar no Roblox Asset Manager, aguardar moderação e registrar IDs reais na configuração. PNG de origem no repo não equivale a asset publicado.
+4. Importar os originais de `assets/bingo/card-skins/source/<id>.png` no Roblox Asset Manager, aguardar moderação e registrar IDs reais em `src/shared/Features/RewardsShop/RewardCatalog.luau` como `rbxassetid://...`. PNG de origem no repo não equivale a asset publicado.
 5. Renderizar imagem atrás da grade via `ImageLabel`/camada de fundo. Fallback Clássico se asset falhar. Nunca depender da imagem para comunicar número, chamada, marca, preço, raridade ou instrução.
 
 Geração do conceito e arquivos finais usa ferramenta de imagem; Studio/Roblox faz importação, moderação e exibição. Não é necessário ferramenta externa para desenhar números e estados, nem plugin de UI para o MVP.

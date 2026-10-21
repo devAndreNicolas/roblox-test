@@ -13,7 +13,7 @@ Criar motivo para voltar ao lobby e testar monetização sem tornar o jogo uma c
 - Prioridade de negócio: retenção; receita é secundária.
 - Fichas são moeda interna, sem promessa de que jogadores ganhem Robux.
 - Itens podem afetar gameplay, desde que usos por partida sejam limitados; nome decidido: Suborno do MC.
-- Trilha de sete partidas concluídas, sem streak punitiva; convite recompensa depois da primeira partida do convidado.
+- Trilha de sete marcos obtidos ao concluir uma partida em dias diferentes, sem streak punitiva; convite recompensa depois da primeira partida do convidado.
 - Cinco temas de cartela: três com rota por Fichas e dois somente Robux; conceito visual completo, não apenas carimbo.
 - Identidade visual Bingo Noir com acentos mais vivos; híbrido de UI nativa Luau e ilustrações originais geradas.
 - Fazer primeiro prancha de conceito para revisão, depois PNGs finais individuais.

@@ -25,6 +25,12 @@ function View.new(parent: Instance, onMark: (number) -> ())
 	local reminder = Surface.Text(root, "Reminder", 16, Theme.Paper)
 	local historyPanel = Surface.Panel(root, "HistorySurface", Theme.Ink, 12)
 	history.Parent = historyPanel; reminder.Parent = historyPanel
+	local subornPanel = Surface.Panel(root, "SubornAnnouncement", Theme.Burgundy, 14)
+	subornPanel.ZIndex = 12; subornPanel.Visible = false
+	local subornTitle = Surface.Text(subornPanel, "SubornTitle", 24, Theme.White, Theme.Display)
+	subornTitle.ZIndex = 13; subornTitle.TextXAlignment = Enum.TextXAlignment.Center
+	local subornDetail = Surface.Text(subornPanel, "SubornDetail", 16, Theme.White, Theme.Bold)
+	subornDetail.ZIndex = 13; subornDetail.TextXAlignment = Enum.TextXAlignment.Center
 	local view = {Instance = root}
 	function view.Layout(width: number, height: number, touch: boolean): ()
 		local horizontal = width > height or width >= 760
@@ -54,6 +60,10 @@ function View.new(parent: Instance, onMark: (number) -> ())
 			race.Layout(left, (if showHistory then 204 else 140) + cw, cw, 52, true, height)
 		end
 		local w, h = call.Size.X.Offset, call.Size.Y.Offset
+		local subornWidth = math.min(460, width - 32)
+		Surface.Rect(subornPanel, (width - subornWidth) / 2, math.max(96, (height - 124) / 2), subornWidth, 124)
+		Surface.Rect(subornTitle, 12, 12, subornWidth - 24, 36)
+		Surface.Rect(subornDetail, 12, 52, subornWidth - 24, 60)
 		local diameter = h - 16
 		Surface.Rect(ball.Instance, 8, 8, diameter, diameter)
 		local x = diameter + 20
@@ -69,12 +79,20 @@ function View.new(parent: Instance, onMark: (number) -> ())
 			ball.Render(nil)
 			race.Collapse()
 		end
-		ball.Render(snapshot.lastCalledNumber)
-		timing.Text = `Auto call in {model.seconds}s`
+		local announcing = snapshot.phase == "SubornAnnouncement"
+		subornPanel.Visible = announcing
+		if announcing then
+			local number = snapshot.subornNumber
+			local letter = if number then ({"B", "I", "N", "G", "O"})[math.ceil(number / 15)] else "?"
+			subornTitle.Text = `O MC foi subornado! {letter}-{number or "?"}`
+			subornDetail.Text = `{snapshot.subornBuyerName or "Um jogador"} escolheu a próxima chamada. Todos podem marcar; ninguém marca automaticamente.`
+		end
+		ball.Render(if announcing then snapshot.subornNumber else snapshot.lastCalledNumber)
+		timing.Text = if announcing then "Próxima chamada para todos" else `Auto call in {model.seconds}s`
 		progress.Size = UDim2.fromScale(math.clamp(snapshot.timeRemaining / math.max(0.1, snapshot.callIntervalSeconds), 0, 1), 1)
 		local called: {[number]: boolean} = {}
 		for _, number in snapshot.calledNumbers do called[number] = true end
-		card.Render(snapshot.card, "play", pending, called)
+		card.Render(snapshot.card, if announcing then "preview" else "play", pending, called)
 		race.Render(snapshot.standings, Players.LocalPlayer.UserId)
 		local recent = {}
 		for index = math.max(1, #snapshot.calledNumbers - 3), #snapshot.calledNumbers do
@@ -88,6 +106,7 @@ function View.new(parent: Instance, onMark: (number) -> ())
 		race.CelebrateOwn()
 	end
 	function view.CelebrateLead(): () race.CelebrateLead() end
+	function view.SetTheme(themeId: string): () card.SetTheme(themeId) end
 	function view.Destroy(): () card.Destroy(); race.Destroy(); ball.Destroy(); root:Destroy() end
 	return view
 end

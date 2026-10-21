@@ -1,8 +1,8 @@
 # 005 — Recompensas, Coleção e Loja
 
-**Status:** Draft para aprovação antes da implementação.  
-**Objetivo de produto:** testar retorno ao jogo e validar se recompensas e compras melhoram a experiência sem esconder regras ou tornar a vitória uma compra.  
-**Relacionados:** [Plano técnico](plan.md) · [Tarefas](tasks.md) · [Validação](validation.md) · [Personas](../player-personas.md) · [Feedback de playtest](research/playtest-feedback.md) · [Prompt pack de assets](research/card-skin-art-brief.md).
+**Status:** Protótipo implementado em fonte; cinco artes de cartela e nove ícones de oferta enviados; nove ofertas Robux configuradas na experiência experimental. Uma compra simulada de Fichas confirmada; validação multiplayer, persistência real e compras restantes ainda pendentes.
+**Objetivo de produto:** testar retorno ao jogo e validar se recompensas e compras melhoram a experiência sem esconder regras ou tornar a vitória uma compra.
+**Relacionados:** [Plano técnico](plan.md) · [Tarefas](tasks.md) · [Validação](validation.md) · [Configuração para publicar](setup.md) · [Personas](../player-personas.md) · [Feedback de playtest](research/playtest-feedback.md) · [Prompt pack de assets](research/card-skin-art-brief.md).
 
 ## Resultado esperado
 
@@ -18,7 +18,7 @@ Atender crianças e adolescentes no mesmo jogo, com leitura direta, preços e ef
 
 - **Fichas:** moeda ganha jogando.
 - **Recompensas Diárias:** trilha de sete etapas de partidas concluídas; não é uma sequência de dias consecutivos.
-- **Loja:** tela de compra e catálogo.
+- **Loja:** painel do lobby com seções Fichas, Cartelas, Poderes e Convites.
 - **Coleção:** cosméticos permanentes de tema completo da cartela.
 - **Tema de cartela:** moldura e decoração da superfície da cartela; grade, letras, números, estados e marcas continuam sendo UI nativa e legível.
 - **Suborno do MC:** item consumível que transforma um número não chamado da cartela do comprador na próxima chamada compartilhada.
@@ -42,7 +42,7 @@ Não inclui troca entre jogadores, saque ou pagamento de Robux ao jogador, passe
 ### Recompensas Diárias
 
 - **DAILY-01:** sete marcos avançam por partidas concluídas: 10, 15, 20, 25, 30, 35 e 40 Fichas, respectivamente; o sétimo inclui um tema da rotação de marcos, começando por Estrela de Palco.
-- **DAILY-02:** progresso persiste entre sessões e dias. Perder um dia não reinicia, remove, expira nem reduz progresso. Um jogador pode avançar no máximo um marco por partida concluída.
+- **DAILY-02:** progresso persiste entre sessões e dias. Perder um dia não reinicia, remove, expira nem reduz progresso. O primeiro encerramento de partida elegível de cada dia UTC avança um marco; partidas adicionais no mesmo dia continuam pagando a recompensa de partida, mas não avançam a trilha.
 - **DAILY-03:** ao concluir o sétimo marco, a trilha volta ao primeiro marco. A rotação inicial de recompensa do sétimo marco é Estrela de Palco, Selo do Clube e Dossiê Azul; ao concluir a rotação, começa novamente por Estrela de Palco. Se o jogador já possuir o tema do ciclo, aplica-se a conversão de duplicata. Progresso nunca é concedido por abrir o lobby ou permanecer AFK.
 - **DAILY-04:** se o jogador já possui a skin concedida no marco, recebe 50 Fichas em seu lugar. A UI mostra a conversão antes de reclamar a recompensa.
 - **DAILY-05:** a tela mostra marco atual, próximo prêmio, progresso da sessão, e o fato de não haver penalidade por perder um dia. Sem contagem regressiva enganosa.
@@ -72,6 +72,8 @@ Não inclui troca entre jogadores, saque ou pagamento de Robux ao jogador, passe
 - **SHOP-04:** as skins mudam somente identidade visual da cartela; nunca contraste, legibilidade, números, estados de chamada, probabilidade ou velocidade de marcação. Há fallback Clássico caso o asset falhe.
 - **SHOP-05:** equipar uma skin é reversível e gratuito. A escolha persiste e aplica-se à próxima apresentação da cartela; não altera a partida ativa.
 - **SHOP-06:** duplicata de recompensa obtida por trilha/convite converte a skin duplicada em 50 Fichas. Compra de skin já possuída é bloqueada antes de abrir o prompt Robux.
+- **SHOP-07:** a seção Fichas oferece três Developer Products repetíveis: Punhado (+120 Fichas, preço-alvo 29 Robux), Pacote (+350, 79 Robux) e Maleta (+800, 169 Robux). A UI mostra a quantidade exata antes do prompt, consulta o preço real da plataforma e deixa o botão indisponível enquanto produto ou preço não estiver configurado. A compra acrescenta Fichas ao saldo existente; não concede Robux ao jogador.
+- **SHOP-08:** o painel usa identidade Bingo Noir de bastidores de TV: letreiro azul, saldo e próximo marco no topo, categorias horizontais e cartões com a arte publicada de cada tema sobre uma cartela numérica de amostra. Estado de posse, preço, estoque e efeito aparecem perto da ação correspondente. Layout adapta largura e altura em desktop e telefone.
 
 ### Suborno do MC (vantagem limitada)
 
@@ -87,14 +89,14 @@ Não inclui troca entre jogadores, saque ou pagamento de Robux ao jogador, passe
 ### Robux e recibos
 
 - **MON-01:** temas permanentes são produtos não consumíveis apropriados ao modelo de ownership (Game Passes individuais); Suborno é Developer Product consumível. IDs ficam em configuração do servidor, sem IDs fictícios no build publicado.
-- **MON-02:** servidor processa recibo com `PurchaseId` idempotente: grava a concessão e a chave do recibo de forma atômica no perfil; repetição já concedida responde como processada sem duplicar estoque/moeda.
+- **MON-02:** servidor processa recibos de Suborno e pacotes de Fichas com `PurchaseId` idempotente: grava a concessão e a chave do recibo de forma atômica no perfil; repetição já concedida responde como processada sem duplicar estoque/moeda.
 - **MON-03:** falha temporária de persistência não retorna recibo como concedido. O sistema tenta novamente conforme o fluxo de recibos do Roblox; UI não promete concessão até confirmar.
 - **MON-04:** oferta, preço, quantidade e efeito estão claros antes do prompt. Nenhum botão usa urgência enganosa, compra em um clique sem confirmação da plataforma, ou faz o item parecer grátis.
 
 ## Critérios de aceitação
 
 1. Completar uma partida paga 5 Fichas uma vez; vencedor fica com 7; empate paga 5 a cada elegível; repetir o evento não paga de novo.
-2. Completar partida avança exatamente um marco; alternar dias não reinicia; completar etapa 7 concede Estrela ou 50 Fichas por duplicata.
+2. A primeira partida concluída de cada dia UTC avança exatamente um marco; partidas adicionais no mesmo dia pagam apenas 5/7 Fichas de partida. Alternar dias não reinicia; completar etapa 7 concede o tema da rotação ou 50 Fichas por duplicata.
 3. Convite válido só recompensa após primeira partida concluída e paga cada lado uma vez; nome/código arbitrário não cria vínculo.
 4. Catálogo mostra obtenção, custo, ownership, preço Robux atualizado e efeito do Suborno antes da compra; compra de skin possuída é evitada.
 5. Equipar tema altera somente a moldura; números, marcas e contraste mantêm leitura em telefone e desktop; asset quebrado usa Clássico.
