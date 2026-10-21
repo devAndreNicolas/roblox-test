@@ -53,6 +53,7 @@ local function styleOnce(live: Instance, design: Instance): ()
 		copy(live, design, "BorderColor3")
 		copy(live, design, "ClipsDescendants")
 		copy(live, design, "SizeConstraint")
+		copy(live, design, "AutomaticSize")
 		if not isDynamicColor(live) then
 			copy(live, design, "BackgroundColor3")
 			if live:IsA("TextLabel") or live:IsA("TextButton") or live:IsA("TextBox") then
@@ -70,6 +71,7 @@ local function styleOnce(live: Instance, design: Instance): ()
 			copy(live, design, "TextStrokeTransparency")
 			copy(live, design, "LineHeight")
 			copy(live, design, "RichText")
+			copy(live, design, "TextTruncate")
 		end
 		if (live:IsA("ImageLabel") and design:IsA("ImageLabel"))
 			or (live:IsA("ImageButton") and design:IsA("ImageButton"))
@@ -85,9 +87,22 @@ local function styleOnce(live: Instance, design: Instance): ()
 			copy(live, design, "SliceCenter")
 			copy(live, design, "SliceScale")
 		end
+		if live:IsA("ScrollingFrame") and design:IsA("ScrollingFrame") then
+			copy(live, design, "ScrollBarThickness")
+			copy(live, design, "ScrollBarImageColor3")
+			copy(live, design, "ScrollBarImageTransparency")
+			copy(live, design, "VerticalScrollBarInset")
+			copy(live, design, "HorizontalScrollBarInset")
+		end
+		if live:IsA("CanvasGroup") and design:IsA("CanvasGroup") then
+			copy(live, design, "GroupColor3")
+			copy(live, design, "GroupTransparency")
+		end
 	elseif live:IsA("UICorner") and design:IsA("UICorner") then
 		copy(live, design, "CornerRadius")
 	elseif live:IsA("UIStroke") and design:IsA("UIStroke") then
+		copy(live, design, "ApplyStrokeMode")
+		copy(live, design, "LineJoinMode")
 		if not live.Parent or live.Parent.Name ~= "BingoCard" then
 			copy(live, design, "Color")
 		end
@@ -159,6 +174,10 @@ local function findMatch(parent: Instance, design: Instance, used: { [Instance]:
 end
 
 function VisualDesign.new(live: ScreenGui, design: ScreenGui)
+	copy(live, design, "DisplayOrder")
+	copy(live, design, "ScreenInsets")
+	copy(live, design, "ZIndexBehavior")
+	copy(live, design, "ClipToDeviceSafeArea")
 	local pairs: { Pair } = {}
 	local function collect(liveParent: Instance, designParent: Instance): ()
 		local used: { [Instance]: boolean } = {}
