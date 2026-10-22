@@ -1,6 +1,6 @@
 # 006 — Matriz de validação: UI Studio-managed
 
-**Status:** O round-trip do piloto está validado. Nenhuma tela de produção desta spec foi migrada; validação visual/funcional por tela permanece pendente.
+**Status:** Round-trip do piloto validado. HUD compartilhado e loja migrados para templates Studio. Importacao direta do Figma e testes completos de compras/mobile pendentes.
 **Importante:** esta matriz deve ser executada no Studio após cada corte de tela. Não substituir a validação real de UI por leitura do `.rbxmx` ou comparação de screenshot isolada.
 
 ## Fluxo de edição e sincronização
@@ -60,7 +60,16 @@ Ao terminar um pacote, registrar data, commit, frame/viewport inspecionado, cami
 
 ## Primeiro conjunto de componentes clonado em runtime — aguardando playtest
 
-- Alteração: `LobbyView`, `IntroView` e `ResultsView` clonam seus roots de `BingoGuiDesign > Content` e ligam textos/ações/estado; Intro mantém sua cartela dinâmica. `RewardShopController` clona `RewardsShop > RewardsHud` e liga `Fichas`, `NextReward` e `OpenShop`, e também clona `RewardsShop > UseSuborn`. `ShowAudio` clona `MusicToggle` e `EffectsToggle`. Handlers, estados, conteúdo dinâmico e construtores anteriores como fallback permanecem em Luau.
+- Alteração: um único `UI.StudioTemplate` resolve/clona os modelos e fornece tokens/prefabs. `LobbyView`, `IntroView` e `ResultsView` clonam seus roots de `BingoGuiDesign > Content` e ligam textos/ações/estado; Intro mantém sua cartela dinâmica. `RewardShopController` clona `RewardsShop > RewardsHud` e liga `Fichas`, `NextReward` e `OpenShop`, e também clona `RewardsShop > UseSuborn`. `ShowAudio` clona `MusicToggle` e `EffectsToggle`. Handlers, estados, conteúdo dinâmico e construtores anteriores como fallback permanecem em Luau.
 - Verificação parcial em Studio: confirmou as classes de todos os nós obrigatórios de `LobbyView`, `IntroView`, `ResultsView`, HUD, Suborno e toggles, além de `UIScale` para o reveal de resultado; os modelos aceitam `Clone()`. Os clones de verificação foram destruídos sem serem parentados ao jogo.
 - Estado de validação: não aprovado ainda. O Studio já conectado está em Play mode e não foi reiniciado após esta alteração. Lint/build também não puderam ser executados porque os executáveis locais `selene`, `stylua` e `rojo` falham ao iniciar com erro de caminho do Windows.
 - Próximo check: reiniciar Play pelo Rojo; conferir Lobby/status da fila/retry, Intro/falas/skip/cartela, resultados win/loss/draw e skip, HUD desktop/mobile, saldo/marco, abrir a loja, áudio On/Off, Suborno habilitado/desabilitado e ausência de duplicação; desligar o template para confirmar os fallbacks.
+
+
+## HUD e loja em templates Studio - 2026-10-22
+
+- Projeto conectado: `BINGO Experimental` (place `105504891926354`), validado em Play mode desktop.
+- `RewardsShop.ShopPanel` e `ShopShade` foram clonados do template; a tela tem uma unica instancia. Abrir/fechar a loja e navegar para Tickets e Cards funcionaram. A captura de Cards mostrou a cartela dinamica com moldura do tema Blue Dossier e os botoes de compra existentes.
+- `MusicToggle` e `EffectsToggle` agora usam filhos Studio `Icon`, `Label` e `State`; os estados On/Off mudam ao clicar. Layout desktop em linha; layout compacto de partida mobile configurado no controller.
+- Output sem erros novos dos controllers. Permanecem os avisos conhecidos de DataStore bloqueado no Studio e asset `203785492` com tipo incompat?vel.
+- Compra com Tickets, prompt Robux, equipar, recompensa diaria, convite, teste mobile e fidelidade pixel a pixel ao Figma continuam pendentes. O Figma MCP Starter recusou leitura de componentes por limite de chamadas; esta migracao usa tokens, hierarquias e assets ja versionados no projeto, nao declara importacao direta dos nodes do Figma.

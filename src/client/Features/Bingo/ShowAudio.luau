@@ -1,9 +1,10 @@
 --!strict
 -- Local music and short confirmation effects; sound never carries gameplay state.
 local SoundService = game:GetService("SoundService")
-local StarterGui = game:GetService("StarterGui")
 local Config = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo.BingoConfig)
-local Theme = require(script.Parent.Parent.Parent.UI.Theme)
+local UI = script.Parent.Parent.Parent.UI
+local Theme = require(UI.Theme)
+local StudioTemplate = require(UI.StudioTemplate)
 
 local ShowAudio = {}
 local musicMuted = false
@@ -19,12 +20,9 @@ local function makeSound(name: string, soundId: string, volume: number): Sound
 end
 
 local function makeToggle(parent: Instance, name: string, top: number): TextButton
-	local design = StarterGui:FindFirstChild("BingoGuiDesign")
-	local template = design and design:FindFirstChild(name)
+	local template = StudioTemplate.Clone(name, parent, "TextButton")
 	if template and template:IsA("TextButton") then
-		local button = template:Clone()
-		button.Parent = parent
-		return button
+		return template
 	end
 	local button = Instance.new("TextButton")
 	button.Name = name
@@ -58,6 +56,20 @@ function ShowAudio.new(parent: Instance)
 	local flourish = makeSound("BingoFlourish", Config.MARK_NOTE_SOUND_ID, 0.22)
 	local musicButton = makeToggle(parent, "MusicToggle", 12)
 	local effectsButton = makeToggle(parent, "EffectsToggle", 54)
+	local function setToggle(button: TextButton, label: string, iconText: string, enabled: boolean): ()
+		local icon = button:FindFirstChild("Icon")
+		local text = button:FindFirstChild("Label")
+		local state = button:FindFirstChild("State")
+		if icon and icon:IsA("TextLabel") and text and text:IsA("TextLabel") and state and state:IsA("TextLabel") then
+			icon.Text = iconText
+			text.Text = label
+			state.Text = if enabled then "ON" else "OFF"
+			state.BackgroundColor3 = if enabled then Theme.Mark else Theme.Muted
+			button.Text = ""
+		else
+			button.Text = label .. ": " .. (if enabled then "On" else "Off")
+		end
+	end
 	local participant = false
 	local alive = true
 	local markCount = 0
@@ -66,8 +78,8 @@ function ShowAudio.new(parent: Instance)
 	local ducked = false
 	local function update(): ()
 		music.Volume = if musicMuted then 0 else (if ducked then 0.08 elseif participant then 0.17 else 0.1)
-		musicButton.Text = if musicMuted then "Music: Off" else "Music: On"
-		effectsButton.Text = if effectsMuted then "Effects: Off" else "Effects: On"
+		setToggle(musicButton, "MUSIC", if musicMuted then "♪" else "♫", not musicMuted)
+		setToggle(effectsButton, "EFFECTS", "FX", not effectsMuted)
 	end
 	local function duck(seconds: number): ()
 		duckVersion += 1
@@ -112,17 +124,33 @@ function ShowAudio.new(parent: Instance)
 	end
 	function audio.Layout(width: number, height: number, touch: boolean, view: string): ()
 		local portraitMatch = view == "Match" and width < height and width < 760
+		local compact = portraitMatch
+		for _, button in { musicButton, effectsButton } do
+			local icon = button:FindFirstChild("Icon")
+			local label = button:FindFirstChild("Label")
+			local state = button:FindFirstChild("State")
+			if icon and icon:IsA("GuiObject") and label and label:IsA("TextLabel") and state and state:IsA("TextLabel") then
+				icon.Position = UDim2.fromOffset(if compact then 5 else 8, if compact then 4 else 4)
+				icon.Size = UDim2.fromOffset(if compact then 20 else 26, if compact then 28 else 30)
+				label.Position = UDim2.fromOffset(if compact then 29 else 38, if compact then 9 else 10)
+				label.Size = UDim2.fromOffset(if compact then 48 else 50, 20)
+				label.TextSize = if compact then 10 else 11
+				state.Position = UDim2.fromOffset(if compact then 80 else 91, if compact then 9 else 10)
+				state.Size = UDim2.fromOffset(if compact then 26 else 29, 20)
+				state.TextSize = if compact then 8 else 9
+			end
+		end
 		if portraitMatch then
 			local y = height - (if touch then 42 else 38)
-			musicButton.Size = UDim2.fromOffset(96, 32)
-			effectsButton.Size = UDim2.fromOffset(96, 32)
-			musicButton.Position = UDim2.fromOffset(width / 2 - 6, y)
-			effectsButton.Position = UDim2.fromOffset(width / 2 + 102, y)
+			musicButton.Size = UDim2.fromOffset(112, 36)
+			effectsButton.Size = UDim2.fromOffset(112, 36)
+			musicButton.Position = UDim2.fromOffset(width / 2 - 120, y)
+			effectsButton.Position = UDim2.fromOffset(width / 2 + 8, y)
 		else
-			musicButton.Size = UDim2.fromOffset(104, 36)
-			effectsButton.Size = UDim2.fromOffset(104, 36)
-			musicButton.Position = UDim2.new(1, -12, 0, 12)
-			effectsButton.Position = UDim2.new(1, -12, 0, 54)
+			musicButton.Size = UDim2.fromOffset(128, 40)
+			effectsButton.Size = UDim2.fromOffset(128, 40)
+			musicButton.Position = UDim2.new(1, -276, 0, 12)
+			effectsButton.Position = UDim2.new(1, -12, 0, 12)
 		end
 	end
 	function audio.PlayMark(): ()

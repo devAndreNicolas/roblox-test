@@ -71,6 +71,7 @@ assets/ui/
   README.md                   # exportação Studio -> Git -> Rojo
 
 src/client/
+  UI/StudioTemplate.luau      # resolve/clona templates visuais editáveis no Studio
   UI/VisualDesign.luau        # ponte de compatibilidade enquanto migra
   Features/Bingo/             # controllers/views de lobby, intro, match e results
   Features/RewardsShop/        # binding de loja e recompensas

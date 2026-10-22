@@ -1,6 +1,6 @@
 # 006 — Migração de UI Figma para templates gerenciados no Studio
 
-**Status:** Pronta para implementação; inventário individual de nós Figma é a primeira tarefa, pendente da cota MCP.  
+**Status:** Migracao Studio em andamento: HUD compartilhado e loja usam templates editaveis. A importacao dos componentes individuais do Figma segue bloqueada pela cota MCP do plano Starter.
 **Objetivo:** fazer com que toda a aparência da interface do Bingo Noir seja editável no Roblox Studio, preservando a lógica e os contratos atuais em Luau.  
 **Relacionados:** [Plano técnico](plan.md) · [Tarefas](tasks.md) · [Validação](validation.md) · [Auditoria Figma](research/figma-audit.md) · [Inventário de UI](../../docs/figma-ui-kit/INVENTORY.md) · [Instruções de assets e exportação](../../assets/ui/README.md).
 

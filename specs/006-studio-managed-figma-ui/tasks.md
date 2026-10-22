@@ -47,6 +47,9 @@
   - [x] Clonar `Content > ResultsView` e bindar resultado, animação de entrada e skip; manter o construtor anterior como fallback.
   - [ ] Validar win/loss/draw e skip em playtest.
 - [ ] Migrar RewardShopController preservando navegação, preços, prompts, compras, ownership, daily reward e referrals.
+  - [x] Clonar `RewardsShop > ShopPanel` e `ShopShade` do template; conectar os botões/tabulações existentes aos mesmos handlers e manter a construção antiga como fallback.
+  - [x] Vincular linhas de catálogo, prévia da cartela, ícones e estado visual aos filhos editáveis do template.
+  - [ ] Validar compras com Fichas, prompts Robux, equipar, recompensa diária e convites em Studio.
 - [ ] Migrar `WorldGuiTemplates` e respectivos consumidores preservando texto dinâmico, prompt e `Adornee`.
 - [ ] Remover construtores visuais duplicados e fallback só por tela validada; manter fallback para demais telas.
 

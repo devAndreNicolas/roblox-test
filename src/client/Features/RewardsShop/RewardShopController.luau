@@ -1,11 +1,11 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
 local Catalog = require(ReplicatedStorage.Shared.Features.RewardsShop.RewardCatalog)
 local Types = require(ReplicatedStorage.Shared.Features.Bingo.BingoTypes)
 local BingoCard = require(script.Parent.Parent.Bingo.Components.BingoCard)
 local PlatformAdapter = require(script.Parent.RewardShopPlatformAdapter)
 local UI = script.Parent.Parent.Parent.UI
+local StudioTemplate = require(UI.StudioTemplate)
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local ActionButton = require(UI.ActionButton)
@@ -17,6 +17,10 @@ local PREVIEW_NUMBERS =
 	{ 7, 18, 33, 47, 62, 11, 24, 38, 52, 67, 4, 27, 0, 49, 70, 13, 21, 42, 58, 73, 2, 29, 44, 55, 65 }
 
 local function panel(parent: Instance, name: string, color: Color3, radius: number, z: number): Frame
+	local existing = parent:FindFirstChild(name)
+	if existing and existing:IsA("Frame") then
+		return existing
+	end
 	local frame = Surface.Panel(parent, name, color, radius)
 	frame.ZIndex = z
 	return frame
@@ -31,6 +35,11 @@ local function label(
 	font: Enum.Font,
 	z: number
 ): TextLabel
+	local existing = parent:FindFirstChild(name)
+	if existing and existing:IsA("TextLabel") then
+		existing.Text = value
+		return existing
+	end
 	local object = Surface.Text(parent, name, size, color, font)
 	object.Text = value
 	object.ZIndex = z
@@ -39,6 +48,9 @@ local function label(
 end
 
 local function outline(object: GuiObject, color: Color3, thickness: number): ()
+	if object:FindFirstChildOfClass("UIStroke") then
+		return
+	end
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = color
 	stroke.Thickness = thickness
@@ -84,6 +96,12 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		color: Color3,
 		z: number
 	): TextButton
+		local existing = parent:FindFirstChild(name)
+		if existing and existing:IsA("TextButton") then
+			existing.Text = value
+			table.insert(connections, existing.Activated:Connect(action))
+			return existing
+		end
 		local component = ActionButton.new(parent, value, action)
 		table.insert(buttons, component)
 		local object = component.Instance
@@ -95,16 +113,26 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		return object
 	end
 
+	local function image(parent: Instance, name: string, asset: string, z: number): ImageLabel
+		local existing = parent:FindFirstChild(name)
+		if existing and existing:IsA("ImageLabel") then
+			return existing
+		end
+		local object = Instance.new("ImageLabel")
+		object.Name = name
+		object.Image = asset
+		object.BackgroundTransparency = 1
+		object.ScaleType = Enum.ScaleType.Fit
+		object.ZIndex = z
+		object.Parent = parent
+		return object
+	end
+
 	local hud: Frame
 	local hudBalance: TextLabel
 	local hudDaily: TextLabel
 	local hudOpen: TextButton
-	local designGui: Instance? = StarterGui:FindFirstChild("BingoGuiDesign")
-	if not designGui and gui.Parent then
-		designGui = gui.Parent:FindFirstChild("BingoGuiDesign")
-	end
-	local designRewardsShop = designGui and designGui:FindFirstChild("RewardsShop")
-	local designHud = designRewardsShop and designRewardsShop:FindFirstChild("RewardsHud")
+	local designHud = StudioTemplate.Find("RewardsShop.RewardsHud")
 	local designBalance = designHud and designHud:FindFirstChild("Fichas")
 	local designDaily = designHud and designHud:FindFirstChild("NextReward")
 	local designOpen = designHud and designHud:FindFirstChild("OpenShop")
@@ -116,9 +144,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		and designDaily:IsA("TextLabel")
 		and designOpen ~= nil
 		and designOpen:IsA("TextButton")
-	if hasStudioHud then
-		hud = (designHud :: Frame):Clone()
-		hud.Parent = root
+	local clonedHud = if hasStudioHud then StudioTemplate.Clone("RewardsShop.RewardsHud", root, "Frame") else nil
+	if clonedHud and clonedHud:IsA("Frame") then
+		hud = clonedHud
 		hudBalance = hud:FindFirstChild("Fichas") :: TextLabel
 		hudDaily = hud:FindFirstChild("NextReward") :: TextLabel
 		hudOpen = hud:FindFirstChild("OpenShop") :: TextButton
@@ -150,29 +178,42 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			fire("Activate")
 		end
 	end
-	local designPower = designRewardsShop and designRewardsShop:FindFirstChild("UseSuborn")
+	local designPower = StudioTemplate.Find("RewardsShop.UseSuborn")
 	local power: TextButton
-	if designPower and designPower:IsA("TextButton") then
-		power = designPower:Clone()
-		power.Parent = root
+	local clonedPower = if designPower and designPower:IsA("TextButton")
+		then StudioTemplate.Clone("RewardsShop.UseSuborn", root, "TextButton")
+		else nil
+	if clonedPower and clonedPower:IsA("TextButton") then
+		power = clonedPower
 		table.insert(connections, power.Activated:Connect(activateSuborn))
 	else
 		power = button(root, "UseSuborn", "BRIBE THE MC", activateSuborn, Theme.Burgundy, 32)
 	end
 
-	local shade = Instance.new("TextButton")
-	shade.Name = "ShopShade"
-	shade.Text = ""
-	shade.BackgroundColor3 = Theme.Midnight
-	shade.BackgroundTransparency = 0.16
-	shade.BorderSizePixel = 0
-	shade.Size = UDim2.fromScale(1, 1)
-	shade.ZIndex = 40
-	shade.Visible = false
-	shade.Parent = root
+	local shade = StudioTemplate.Clone("RewardsShop.ShopShade", root, "TextButton") :: TextButton?
+	if not shade then
+		shade = Instance.new("TextButton")
+		shade.Name = "ShopShade"
+		shade.Text = ""
+		shade.BackgroundColor3 = Theme.Midnight
+		shade.BackgroundTransparency = 0.16
+		shade.BorderSizePixel = 0
+		shade.Size = UDim2.fromScale(1, 1)
+		shade.ZIndex = 40
+		shade.Visible = false
+		shade.Parent = root
+	end
 
 	local shop = panel(root, "ShopPanel", Theme.Midnight, 18, 41)
 	outline(shop, Theme.Spotlight, 2)
+	if shop.Parent == root and shop:GetAttribute("StudioTemplate") == nil then
+		local templateShop = StudioTemplate.Find("RewardsShop.ShopPanel")
+		if templateShop and templateShop:IsA("Frame") then
+			shop:Destroy()
+			shop = StudioTemplate.Clone("RewardsShop.ShopPanel", root, "Frame") :: Frame
+			shop:SetAttribute("StudioTemplate", true)
+		end
+	end
 	shop.ClipsDescendants = true
 	shop.Visible = false
 	local header = panel(shop, "Header", Theme.Stage, 0, 42)
@@ -199,11 +240,32 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local demoNote = label(rail, "DemoNote", "", 11, Theme.Muted, Theme.Body, 43)
 
 	local scroll: ScrollingFrame
-	local nav = Instance.new("Frame")
-	nav.Name = "Categories"
-	nav.BackgroundTransparency = 1
-	nav.ZIndex = 43
-	nav.Parent = shop
+	local templateScroll = shop:FindFirstChild("Catalog")
+	if templateScroll and templateScroll:IsA("ScrollingFrame") then
+		scroll = templateScroll
+	else
+		scroll = Instance.new("ScrollingFrame")
+		scroll.Name = "Catalog"
+		scroll.BackgroundTransparency = 1
+		scroll.BorderSizePixel = 0
+		scroll.ScrollBarThickness = 5
+		scroll.ScrollBarImageColor3 = Theme.Spotlight
+		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		scroll.CanvasSize = UDim2.fromOffset(0, 0)
+		scroll.ZIndex = 43
+		scroll.Parent = shop
+	end
+	local existingNav = shop:FindFirstChild("Categories")
+	local nav: Frame
+	if existingNav and existingNav:IsA("Frame") then
+		nav = existingNav
+	else
+		nav = Instance.new("Frame")
+		nav.Name = "Categories"
+		nav.BackgroundTransparency = 1
+		nav.ZIndex = 43
+		nav.Parent = shop
+	end
 	local tabs: { [string]: TextButton } = {}
 	local tabLabels = { Fichas = "TICKETS", Cartelas = "CARDS", Poderes = "POWER UPS", Convites = "INVITES" }
 	for _, tab in { "Fichas", "Cartelas", "Poderes", "Convites" } do
@@ -225,24 +287,20 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		Theme.Body,
 		43
 	)
-	scroll = Instance.new("ScrollingFrame")
-	scroll.Name = "Catalog"
-	scroll.BackgroundTransparency = 1
-	scroll.BorderSizePixel = 0
-	scroll.ScrollBarThickness = 5
-	scroll.ScrollBarImageColor3 = Theme.Spotlight
-	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	scroll.CanvasSize = UDim2.fromOffset(0, 0)
-	scroll.ZIndex = 43
-	scroll.Parent = shop
-	local list = Instance.new("UIListLayout")
+	local list = scroll:FindFirstChildOfClass("UIListLayout")
+	if not list then
+		list = Instance.new("UIListLayout")
+		list.Parent = scroll
+	end
 	list.Padding = UDim.new(0, 10)
 	list.SortOrder = Enum.SortOrder.LayoutOrder
-	list.Parent = scroll
-	local padding = Instance.new("UIPadding")
+	local padding = scroll:FindFirstChildOfClass("UIPadding")
+	if not padding then
+		padding = Instance.new("UIPadding")
+		padding.Parent = scroll
+	end
 	padding.PaddingRight = UDim.new(0, 8)
 	padding.PaddingBottom = UDim.new(0, 8)
-	padding.Parent = scroll
 
 	local notice = panel(shop, "Notice", Theme.Burgundy, 8, 48)
 	notice.Visible = false
@@ -284,13 +342,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 
 	for index, pack in Catalog.FICHA_PACKS do
 		local row = entry("Fichas", pack.id, index, 116, Theme.Paper)
-		row.icon = Instance.new("ImageLabel")
-		row.icon.Name = "OfferIcon"
-		row.icon.Image = pack.icon
-		row.icon.BackgroundTransparency = 1
-		row.icon.ScaleType = Enum.ScaleType.Fit
-		row.icon.ZIndex = 45
-		row.icon.Parent = row.frame
+		row.icon = image(row.frame, "OfferIcon", pack.icon, 45)
 		row.kicker = label(row.frame, "Kicker", string.upper(pack.name), 13, Theme.Burgundy, Theme.Bold, 45)
 		row.amount = label(row.frame, "Amount", `+{pack.amount} TICKETS`, 29, Theme.Ink, Theme.Display, 45)
 		row.detail =
@@ -316,6 +368,10 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	-- therefore has the same frame, numbers and marked states in play.
 	local showcase = entry("Cartelas", "theme_showcase", 0, 238, DEEP_BLUE)
 	outline(showcase.frame, Theme.Spotlight, 2)
+	local templateCard = showcase.frame:FindFirstChild("BingoCard")
+	if templateCard then
+		templateCard:Destroy()
+	end
 	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end)
 	local sampleCells: { Types.CardCell } = {}
 	for index, number in PREVIEW_NUMBERS do
@@ -360,16 +416,16 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		row.swatchPaper = panel(row.swatch, "Paper", theme.paper, 5, 46)
 		row.swatchText = label(row.swatchPaper, "Letters", "B I N G O", 10, theme.accent, Theme.Bold, 47)
 		row.swatchText.TextXAlignment = Enum.TextXAlignment.Center
-		row.sample = Instance.new("Frame")
-		row.sample.Name = "SampleNumbers"
+		row.sample = panel(row.swatchPaper, "SampleNumbers", Theme.Paper, 0, 47)
 		row.sample.BackgroundTransparency = 1
-		row.sample.ZIndex = 47
-		row.sample.Parent = row.swatchPaper
-		local sampleLayout = Instance.new("UIGridLayout")
+		local sampleLayout = row.sample:FindFirstChildOfClass("UIGridLayout")
+		if not sampleLayout then
+			sampleLayout = Instance.new("UIGridLayout")
+			sampleLayout.Parent = row.sample
+		end
 		sampleLayout.CellSize = UDim2.new(0.2, -1, 0.2, -1)
 		sampleLayout.CellPadding = UDim2.fromOffset(1, 1)
 		sampleLayout.FillDirectionMaxCells = 5
-		sampleLayout.Parent = row.sample
 		for cellIndex, number in PREVIEW_NUMBERS do
 			local digit = label(
 				row.sample,
@@ -383,13 +439,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			digit.TextXAlignment = Enum.TextXAlignment.Center
 			digit.LayoutOrder = cellIndex
 		end
-		row.art = Instance.new("ImageLabel")
-		row.art.Name = "ThemeArtwork"
-		row.art.Image = theme.image
-		row.art.BackgroundTransparency = 1
-		row.art.ScaleType = Enum.ScaleType.Fit
-		row.art.ZIndex = 48
-		row.art.Parent = row.swatch
+		row.art = image(row.swatch, "ThemeArtwork", theme.image, 48)
 		table.insert(previewArt, row.art)
 		row.name = label(row.frame, "Name", theme.name, 20, Theme.Ink, Theme.Bold, 45)
 		row.detail = label(row.frame, "Detail", "Permanent card theme", 12, Theme.Muted, Theme.Body, 45)
@@ -412,13 +462,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	end
 
 	local powerRow = entry("Poderes", "suborn", 1, 232, Theme.Paper)
-	local powerMark = Instance.new("ImageLabel")
-	powerMark.Name = "OfferIcon"
-	powerMark.Image = Catalog.SUBORN_ICON
-	powerMark.BackgroundTransparency = 1
-	powerMark.ScaleType = Enum.ScaleType.Fit
-	powerMark.ZIndex = 45
-	powerMark.Parent = powerRow.frame
+	local powerMark = image(powerRow.frame, "OfferIcon", Catalog.SUBORN_ICON, 45)
 	powerRow.name = label(powerRow.frame, "Name", "BRIBE THE MC", 26, Theme.Ink, Theme.Display, 45)
 	powerRow.detail = label(
 		powerRow.frame,

@@ -1,6 +1,6 @@
 --!strict
-local design = game:GetService("StarterGui"):FindFirstChild("BingoGuiDesign")
-local visualStates = design and design:FindFirstChild("VisualStates")
+local StudioTemplate = require(script.Parent.StudioTemplate)
+local visualStates = StudioTemplate.Find("VisualStates")
 
 local function color(name: string, fallback: Color3): Color3
 	local value = visualStates and visualStates:FindFirstChild(name)

@@ -4,14 +4,12 @@ local UI = script.Parent.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local Button = require(UI.ActionButton)
-local StarterGui = game:GetService("StarterGui")
+local StudioTemplate = require(UI.StudioTemplate)
 local State = require(script.Parent.Parent.PresentationState)
 local TweenService = game:GetService("TweenService")
 local View = {}
 function View.new(parent: Instance, skip: () -> ())
-	local design = StarterGui:FindFirstChild("BingoGuiDesign")
-	local content = design and design:FindFirstChild("Content")
-	local template = content and content:FindFirstChild("ResultsView")
+	local template = StudioTemplate.Find("Content.ResultsView")
 	local templatePanel = template and template:FindFirstChild("Outcome")
 	local templateEyebrow = templatePanel and templatePanel:FindFirstChild("Eyebrow")
 	local templateTitle = templatePanel and templatePanel:FindFirstChild("Title")
@@ -41,8 +39,7 @@ function View.new(parent: Instance, skip: () -> ())
 	local actionController: any? = nil
 	local actionConnection: RBXScriptConnection? = nil
 	if hasStudioTemplate then
-		root = (template :: Frame):Clone()
-		root.Parent = parent
+		root = StudioTemplate.Clone("Content.ResultsView", parent, "Frame") :: Frame
 		panel = root:FindFirstChild("Outcome") :: Frame
 		scale = panel:FindFirstChildOfClass("UIScale") :: UIScale
 		eyebrow = panel:FindFirstChild("Eyebrow") :: TextLabel

@@ -9,6 +9,7 @@ local UI = script.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Status = require(UI.StatusMessage)
 local VisualDesign = require(UI.VisualDesign)
+local StudioTemplate = require(UI.StudioTemplate)
 local State = require(script.Parent.PresentationState)
 local RemoteClient = require(script.Parent.BingoRemoteClient)
 local Scene = require(script.Parent.ScenePresenter)
@@ -110,7 +111,8 @@ function Controller.Start(): ()
 		intro.SetTheme(themeId)
 		match.SetTheme(themeId)
 	end)
-	local design = StarterGui:FindFirstChild("BingoGuiDesign") or playerGui:WaitForChild("BingoGuiDesign", 5)
+	local design = StudioTemplate.Find("") or StarterGui:FindFirstChild("BingoGuiDesign")
+		or playerGui:WaitForChild("BingoGuiDesign", 5)
 	local visual = if design and design:IsA("ScreenGui") then VisualDesign.new(gui, design) else nil
 	local roots = { Lobby = lobby.Instance, Intro = intro.Instance, Match = match.Instance, Results = results.Instance }
 	render = function(): ()

@@ -3,15 +3,13 @@ local UI = script.Parent.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local Button = require(UI.ActionButton)
-local StarterGui = game:GetService("StarterGui")
+local StudioTemplate = require(UI.StudioTemplate)
 local Card = require(script.Parent.Parent.Components.BingoCard)
 local State = require(script.Parent.Parent.PresentationState)
 local TweenService = game:GetService("TweenService")
 local View = {}
 function View.new(parent: Instance, skip: () -> ())
-	local design = StarterGui:FindFirstChild("BingoGuiDesign")
-	local content = design and design:FindFirstChild("Content")
-	local template = content and content:FindFirstChild("IntroView")
+	local template = StudioTemplate.Find("Content.IntroView")
 	local templateCaption = template and template:FindFirstChild("Caption")
 	local templateSpeaker = templateCaption and templateCaption:FindFirstChild("Speaker")
 	local templateInstruction = templateCaption and templateCaption:FindFirstChild("Instruction")
@@ -41,12 +39,11 @@ function View.new(parent: Instance, skip: () -> ())
 	local actionController: any? = nil
 	local actionConnection: RBXScriptConnection? = nil
 	if hasStudioTemplate then
-		root = (template :: Frame):Clone()
+		root = StudioTemplate.Clone("Content.IntroView", parent, "Frame") :: Frame
 		local cardPlaceholder = root:FindFirstChild("BingoCard")
 		if cardPlaceholder then
 			cardPlaceholder:Destroy()
 		end
-		root.Parent = parent
 		caption = root:FindFirstChild("Caption") :: Frame
 		speaker = caption:FindFirstChild("Speaker") :: TextLabel
 		instruction = caption:FindFirstChild("Instruction") :: TextLabel

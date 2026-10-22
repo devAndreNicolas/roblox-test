@@ -2,20 +2,15 @@
 local UI = script.Parent.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
+local StudioTemplate = require(UI.StudioTemplate)
 local Types = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo.BingoTypes)
 local Catalog = require(game:GetService("ReplicatedStorage").Shared.Features.RewardsShop.RewardCatalog)
 local TweenService = game:GetService("TweenService")
 local Card = {}
 
 function Card.VisualTheme(themeId: string): (Color3?, Color3?, string?)
-	local design = game:GetService("StarterGui"):FindFirstChild("BingoGuiDesign")
-	if not design then
-		return nil, nil, nil
-	end
 	if themeId == "classic" then
-		local content = design:FindFirstChild("Content")
-		local match = content and content:FindFirstChild("MatchView")
-		local card = match and match:FindFirstChild("BingoCard")
+		local card = StudioTemplate.Find("Content.MatchView.BingoCard")
 		if card and card:IsA("Frame") then
 			local header = card:FindFirstChild("ThemeHeader")
 			local artwork = card:FindFirstChild("ThemeArtwork")
@@ -24,11 +19,7 @@ function Card.VisualTheme(themeId: string): (Color3?, Color3?, string?)
 				if artwork and artwork:IsA("ImageLabel") then artwork.Image else nil
 		end
 	end
-	local shop = design:FindFirstChild("RewardsShop")
-	local panel = shop and shop:FindFirstChild("ShopPanel")
-	local catalog = panel and panel:FindFirstChild("Catalog")
-	local row = catalog and catalog:FindFirstChild(themeId)
-	local preview = row and row:FindFirstChild("Preview")
+	local preview = StudioTemplate.Find(`RewardsShop.ShopPanel.Catalog.{themeId}.Preview`)
 	if preview and preview:IsA("Frame") then
 		local paper = preview:FindFirstChild("Paper")
 		local art = preview:FindFirstChild("ThemeArtwork")
@@ -103,9 +94,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	local current: { Types.CardCell }? = nil
 	local mode = "preview"
 	local currentCalled: { [number]: boolean } = {}
-	local design = game:GetService("StarterGui"):FindFirstChild("BingoGuiDesign")
-	local components = design and design:FindFirstChild("Components")
-	local cellTemplate = components and components:FindFirstChild("CardCell")
+	local cellTemplate = StudioTemplate.Find("Components.CardCell")
 	for index = 1, 25 do
 		local templateButton = if cellTemplate and cellTemplate:IsA("TextButton") then cellTemplate:Clone() else nil
 		local templateScale = templateButton and templateButton:FindFirstChildOfClass("UIScale")
