@@ -1,7 +1,7 @@
 # 006 — Tarefas: migrar UI do Figma para o Studio
 
 **Fonte:** [Spec](spec.md) e [plano técnico](plan.md).  
-**Status:** documentação criada; implementação de UI ainda não iniciada.
+**Status:** SDD concluída; piloto Studio → `.rbxmx` → Git → Rojo validado. Importação dos componentes Figma e migração das telas ainda não iniciadas.
 
 ## Descoberta e inventário
 
@@ -14,9 +14,9 @@
 
 ## Pipeline Figma → Studio → Git → Rojo
 
-- [ ] Fazer spike de um componente estático e um controle interativo para confirmar a melhor importação e fidelidade no Studio.
+- [ ] Fazer spike de importação Figma → Roblox de um componente estático e um controle interativo; o piloto já validou o round-trip Studio → `.rbxmx` → Rojo, mas não a fidelidade da importação Figma.
 - [ ] Documentar instalação/versão e fluxo de exportação/importação escolhido para cada família.
-- [ ] Confirmar que imagens ficam com IDs Roblox permanentes e criar manifesto de assets.
+- [x] Criar manifesto inicial dos assets visuais já publicados e referenciados pelo jogo; associar nodes de origem Figma assim que a cota permitir.
 - [ ] Confirmar nomes/classes, constraints e propriedades que sobrevivem a `.rbxmx` → Git → Rojo → Studio.
 - [ ] Registrar passo seguro para exportar de volta mudanças visuais do Studio e restaurar fallback após conflito.
 

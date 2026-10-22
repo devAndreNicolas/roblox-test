@@ -4,6 +4,7 @@ The current look of the game is versioned in two Studio-editable models:
 
 - `BingoGuiDesign.rbxmx` -> `StarterGui > BingoGuiDesign` (screen UI: lobby, intro, match, results, shop, rewards, cartelas, audio controls and feedback).
 - `WorldGuiTemplates.rbxmx` -> `ReplicatedStorage > WorldGuiTemplates` (world signs, MC dialogue, number display and queue prompt).
+- `asset-manifest.json` -> source PNGs and permanent Roblox image IDs currently referenced by UI. Figma node attribution is intentionally blank until those exact nodes are read and confirmed.
 
 `BingoGuiDesign` is disabled so it does not appear twice during play. The existing Luau controllers still own text, numbers, visibility, navigation, responsive fallback layout, interaction, purchases and rewards. `VisualDesign` applies Studio-authored appearance to the live GUI. If the design model is missing, the old GUI still works. The world GUI templates are cloned by `BingoWorld`; its old construction path is the fallback.
 

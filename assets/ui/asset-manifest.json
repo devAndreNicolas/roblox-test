@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "note": "Baseline of visual image assets already referenced by the game. These entries are not claimed to be exports from the linked Figma file; exact Figma node IDs and attribution remain pending MCP access.",
+  "assets": [
+    {
+      "key": "card-theme.dossier_blue",
+      "category": "card-frame",
+      "sourceFile": "assets/bingo/card-skins/source/dossier_blue.png",
+      "robloxImageId": "122159259437743",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.THEMES.dossier_blue", "BingoCard.ThemeArtwork"],
+      "fallback": "native theme frame and paper colors"
+    },
+    {
+      "key": "card-theme.stage_star",
+      "category": "card-frame",
+      "sourceFile": "assets/bingo/card-skins/source/stage_star.png",
+      "robloxImageId": "122015776508513",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.THEMES.stage_star", "BingoCard.ThemeArtwork"],
+      "fallback": "native theme frame and paper colors"
+    },
+    {
+      "key": "card-theme.club_seal",
+      "category": "card-frame",
+      "sourceFile": "assets/bingo/card-skins/source/club_seal.png",
+      "robloxImageId": "93200620468622",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.THEMES.club_seal", "BingoCard.ThemeArtwork"],
+      "fallback": "native theme frame and paper colors"
+    },
+    {
+      "key": "card-theme.on_air",
+      "category": "card-frame",
+      "sourceFile": "assets/bingo/card-skins/source/on_air.png",
+      "robloxImageId": "129262034393957",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.THEMES.on_air", "BingoCard.ThemeArtwork"],
+      "fallback": "native theme frame and paper colors"
+    },
+    {
+      "key": "card-theme.velvet_gala",
+      "category": "card-frame",
+      "sourceFile": "assets/bingo/card-skins/source/velvet_gala.png",
+      "robloxImageId": "112707626474228",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.THEMES.velvet_gala", "BingoCard.ThemeArtwork"],
+      "fallback": "native theme frame and paper colors"
+    },
+    {
+      "key": "offer.fichas_120",
+      "category": "offer-icon",
+      "sourceFile": "assets/bingo/offer-icons/fichas_120.png",
+      "robloxImageId": "106680168020796",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.FICHA_PACKS.fichas_120"],
+      "fallback": "text-only offer"
+    },
+    {
+      "key": "offer.fichas_350",
+      "category": "offer-icon",
+      "sourceFile": "assets/bingo/offer-icons/fichas_350.png",
+      "robloxImageId": "106755788346393",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.FICHA_PACKS.fichas_350"],
+      "fallback": "text-only offer"
+    },
+    {
+      "key": "offer.fichas_800",
+      "category": "offer-icon",
+      "sourceFile": "assets/bingo/offer-icons/fichas_800.png",
+      "robloxImageId": "88431256137058",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.FICHA_PACKS.fichas_800"],
+      "fallback": "text-only offer"
+    },
+    {
+      "key": "offer.suborn",
+      "category": "offer-icon",
+      "sourceFile": "assets/bingo/offer-icons/suborn.png",
+      "robloxImageId": "105872504074659",
+      "figmaFileKey": "fQwb2sLFJWrImkI0HcwBNf",
+      "figmaNodeId": null,
+      "runtimeConsumers": ["RewardCatalog.SUBORN_ICON"],
+      "fallback": "text-only offer"
+    }
+  ]
+}

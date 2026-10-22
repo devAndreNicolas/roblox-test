@@ -1,6 +1,6 @@
 # 006 — Matriz de validação: UI Studio-managed
 
-**Status:** Planejada; nenhuma tela desta spec foi migrada ou validada ainda.  
+**Status:** O round-trip do piloto está validado. Nenhuma tela de produção desta spec foi migrada; validação visual/funcional por tela permanece pendente.
 **Importante:** esta matriz deve ser executada no Studio após cada corte de tela. Não substituir a validação real de UI por leitura do `.rbxmx` ou comparação de screenshot isolada.
 
 ## Fluxo de edição e sincronização
@@ -43,3 +43,17 @@
 ## Registro por pacote
 
 Ao terminar um pacote, registrar data, commit, frame/viewport inspecionado, caminho do Studio, cenários funcionais percorridos, problemas restantes e fallback mantido/removido. Até esse registro existir, o status daquela tela permanece **não verificada**.
+
+## Piloto de sincronização — 2026-10-21
+
+- Arquivo: `tests/ui-sync-pilot/README.md` e `tests/ui-sync-pilot/PilotGui.rbxmx` (o template temporário foi removido após a prova).
+- Projeto: `studio.project.json`; `default.project.json` permaneceu sem alteração.
+- Evidência registrada: serialização para `.rbxm`, conversão para `.rbxmx`, alteração de origem sincronizada, edição feita no Studio exportada de volta, propriedades preservadas e marcador irmão não mapeado mantido. Não houve duplicação do piloto.
+- Limite conhecido demonstrado: edição no Studio que não foi exportada foi substituída por uma alteração de origem subsequente.
+- O piloto valida o caminho de edição e sincronização do Studio/Rojo. Ele não valida conversão visual/importação do Figma nem aprovação de aparência.
+
+## Inspeção de continuidade — 2026-10-22
+
+- Studio conectado: `BINGO Experimental` (place `105504891926354`), em Play mode.
+- A árvore Client contém um `PlayerGui.BingoGui` ativo e `PlayerGui.BingoGuiDesign` de referência. A captura do viewport mostrou o HUD de lobby, HUD de recompensas e controles de áudio ativos sem uma segunda cópia visível do HUD de referência.
+- Nenhuma interação de compra, estado de partida, tela mobile ou tela de loja foi validada nesta inspeção.
