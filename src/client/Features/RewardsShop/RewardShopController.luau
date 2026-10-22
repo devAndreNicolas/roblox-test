@@ -709,9 +709,12 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		local isLobby = bingo == nil or not bingo.isParticipant
 		hud.Visible = isLobby and not separatedHud
 		if separatedHud then
-			(ticketBalance :: Frame).Visible = isLobby
-			(milestoneProgress :: Frame).Visible = isLobby
-			(openShopButton :: TextButton).Visible = isLobby
+			local balanceComponent = ticketBalance :: Frame
+			local milestoneComponent = milestoneProgress :: Frame
+			local shopButton = openShopButton :: TextButton
+			balanceComponent.Visible = isLobby
+			milestoneComponent.Visible = isLobby
+			shopButton.Visible = isLobby
 		end
 		power.Visible = bingo ~= nil and bingo.isParticipant and bingo.phase == "CallingNumbers"
 		if not isLobby then
