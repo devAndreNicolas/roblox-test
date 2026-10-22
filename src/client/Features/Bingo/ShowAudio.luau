@@ -5,6 +5,7 @@ local Config = require(game:GetService("ReplicatedStorage").Shared.Features.Bing
 local UI = script.Parent.Parent.Parent.UI
 local Theme = require(UI.Theme)
 local StudioTemplate = require(UI.StudioTemplate)
+local Surface = require(UI.Surface)
 
 local ShowAudio = {}
 local musicMuted = false
@@ -130,27 +131,27 @@ function ShowAudio.new(parent: Instance)
 			local label = button:FindFirstChild("Label")
 			local state = button:FindFirstChild("State")
 			if icon and icon:IsA("GuiObject") and label and label:IsA("TextLabel") and state and state:IsA("TextLabel") then
-				icon.Position = UDim2.fromOffset(if compact then 5 else 8, if compact then 4 else 4)
-				icon.Size = UDim2.fromOffset(if compact then 20 else 26, if compact then 28 else 30)
-				label.Position = UDim2.fromOffset(if compact then 29 else 38, if compact then 9 else 10)
-				label.Size = UDim2.fromOffset(if compact then 48 else 50, 20)
-				label.TextSize = if compact then 10 else 11
-				state.Position = UDim2.fromOffset(if compact then 80 else 91, if compact then 9 else 10)
-				state.Size = UDim2.fromOffset(if compact then 26 else 29, 20)
-				state.TextSize = if compact then 8 else 9
+				Surface.SetPosition(icon, UDim2.fromOffset(if compact then 5 else 8, 4))
+				Surface.SetSize(icon, UDim2.fromOffset(if compact then 20 else 26, if compact then 28 else 30))
+				Surface.SetPosition(label, UDim2.fromOffset(if compact then 29 else 38, if compact then 9 else 10))
+				Surface.SetSize(label, UDim2.fromOffset(if compact then 48 else 50, 20))
+				Surface.SetTextSize(label, if compact then 10 else 11)
+				Surface.SetPosition(state, UDim2.fromOffset(if compact then 80 else 91, if compact then 9 else 10))
+				Surface.SetSize(state, UDim2.fromOffset(if compact then 26 else 29, 20))
+				Surface.SetTextSize(state, if compact then 8 else 9)
 			end
 		end
 		if portraitMatch then
 			local y = height - (if touch then 42 else 38)
-			musicButton.Size = UDim2.fromOffset(112, 36)
-			effectsButton.Size = UDim2.fromOffset(112, 36)
-			musicButton.Position = UDim2.fromOffset(width / 2 - 120, y)
-			effectsButton.Position = UDim2.fromOffset(width / 2 + 8, y)
+			Surface.SetSize(musicButton, UDim2.fromOffset(112, 36))
+			Surface.SetSize(effectsButton, UDim2.fromOffset(112, 36))
+			Surface.SetPosition(musicButton, UDim2.fromOffset(width / 2 - 120, y))
+			Surface.SetPosition(effectsButton, UDim2.fromOffset(width / 2 + 8, y))
 		else
-			musicButton.Size = UDim2.fromOffset(128, 40)
-			effectsButton.Size = UDim2.fromOffset(128, 40)
-			musicButton.Position = UDim2.new(1, -276, 0, 12)
-			effectsButton.Position = UDim2.new(1, -12, 0, 12)
+			Surface.SetSize(musicButton, UDim2.fromOffset(128, 40))
+			Surface.SetSize(effectsButton, UDim2.fromOffset(128, 40))
+			Surface.SetPosition(musicButton, UDim2.new(1, -276, 0, 12))
+			Surface.SetPosition(effectsButton, UDim2.new(1, -12, 0, 12))
 		end
 	end
 	function audio.PlayMark(): ()
