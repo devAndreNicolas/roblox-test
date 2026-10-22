@@ -42,6 +42,8 @@
 - [ ] Migrar IntroView preservando falas, skip e preview da cartela.
 - [ ] Migrar MatchView preservando chamadas, marcações, race, history, Suborno e pause.
 - [ ] Migrar ResultsView preservando win/loss/draw, detalhes e skip.
+  - [x] Clonar `Content > ResultsView` e bindar resultado, animação de entrada e skip; manter o construtor anterior como fallback.
+  - [ ] Validar win/loss/draw e skip em playtest.
 - [ ] Migrar RewardShopController preservando navegação, preços, prompts, compras, ownership, daily reward e referrals.
 - [ ] Migrar `WorldGuiTemplates` e respectivos consumidores preservando texto dinâmico, prompt e `Adornee`.
 - [ ] Remover construtores visuais duplicados e fallback só por tela validada; manter fallback para demais telas.
