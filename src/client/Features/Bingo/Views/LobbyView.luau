@@ -16,6 +16,7 @@ function View.new(parent: Instance, retry: () -> ())
 	local templateInstructions = templatePanel and templatePanel:FindFirstChild("Instructions")
 	local templateQueue = templatePanel and templatePanel:FindFirstChild("Queue")
 	local templateAction = templatePanel and templatePanel:FindFirstChild("Action")
+	local studioV2 = templatePanel ~= nil and templatePanel:FindFirstChild("Spec007Marker") ~= nil
 	local hasStudioTemplate = template ~= nil
 		and template:IsA("Frame")
 		and templatePanel ~= nil
@@ -82,6 +83,11 @@ function View.new(parent: Instance, retry: () -> ())
 	end
 	local view = { Instance = root }
 	function view.Layout(width: number, _height: number, _touch: boolean): ()
+		if studioV2 and hasStudioTemplate then
+			Surface.SetPosition(panel, UDim2.fromOffset(if width >= 760 then 20 else 12,
+				if width >= 760 then 12 else 132))
+			return
+		end
 		local w = math.min(480, width - 32)
 		Surface.Rect(panel, if width >= 760 then 24 else (width - w) / 2, 12, w, 166)
 		Surface.Rect(ticketEdge, 0, 0, 6, 166)

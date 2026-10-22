@@ -37,7 +37,6 @@ local function label(
 ): TextLabel
 	local existing = parent:FindFirstChild(name)
 	if existing and existing:IsA("TextLabel") then
-		existing.Text = value
 		return existing
 	end
 	local object = Surface.Text(parent, name, size, color, font)
@@ -84,6 +83,37 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		render()
 	end, function() render() end)
 	local prices = platform.Prices
+	local templateShop = StudioTemplate.Find("RewardsShop.ShopPanel")
+	local studioV2 = templateShop ~= nil and templateShop:IsA("Frame")
+		and templateShop:FindFirstChild("Spec007Marker") ~= nil
+	if studioV2 then
+		local required = {
+			Header = "Frame", ["Header.Title"] = "TextLabel", ["Header.CloseShop"] = "TextButton",
+			Rail = "Frame", ["Rail.Balance"] = "TextLabel", ["Rail.Daily"] = "TextLabel",
+			Categories = "Frame", ["Categories.Fichas"] = "TextButton",
+			["Categories.Cartelas"] = "TextButton", ["Categories.Poderes"] = "TextButton",
+			["Categories.Convites"] = "TextButton", Catalog = "ScrollingFrame",
+			Notice = "Frame", ["Notice.Text"] = "TextLabel",
+			["Catalog.theme_showcase.BingoCard"] = "Frame",
+		}
+		for path, className in required do
+			local item = StudioTemplate.Find(`RewardsShop.ShopPanel.{path}`)
+			if not item or not item:IsA(className) then studioV2 = false end
+		end
+	end
+	if studioV2 then
+		local catalog = (templateShop :: Frame):FindFirstChild("Catalog") :: Instance
+		for _, pack in Catalog.FICHA_PACKS do
+			if not catalog:FindFirstChild(pack.id) then studioV2 = false end
+		end
+		for _, theme in Catalog.THEMES do
+			if theme.id ~= "classic" and not catalog:FindFirstChild(theme.id) then studioV2 = false end
+		end
+		if not catalog:FindFirstChild("theme_showcase") or not catalog:FindFirstChild("suborn")
+			or not catalog:FindFirstChild("invite") or not catalog:FindFirstChild("earn") then
+			studioV2 = false
+		end
+	end
 	local function fire(verb: string, itemId: string?): ()
 		platform.Fire(verb, itemId)
 	end
@@ -98,7 +128,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	): TextButton
 		local existing = parent:FindFirstChild(name)
 		if existing and existing:IsA("TextButton") then
-			existing.Text = value
+			if not studioV2 then existing.Text = value end
 			table.insert(connections, existing.Activated:Connect(action))
 			return existing
 		end
@@ -164,6 +194,24 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			render()
 		end, Theme.Spotlight, 32)
 	end
+	local ticketBalance = if studioV2 then StudioTemplate.Clone("RewardsShop.TicketBalance", root, "Frame") :: Frame? else nil
+	local milestoneProgress = if studioV2 then StudioTemplate.Clone("RewardsShop.MilestoneProgress", root, "Frame") :: Frame? else nil
+	local openShopButton = if studioV2 then StudioTemplate.Clone("RewardsShop.OpenShopButton", root, "TextButton") :: TextButton? else nil
+	local separatedHud = studioV2
+		and ticketBalance ~= nil and ticketBalance:FindFirstChild("Fichas") ~= nil
+		and milestoneProgress ~= nil and milestoneProgress:FindFirstChild("NextReward") ~= nil
+		and openShopButton ~= nil
+	if separatedHud then
+		table.insert(connections, (openShopButton :: TextButton).Activated:Connect(function()
+			menuOpen = true
+			render()
+		end))
+	elseif studioV2 then
+		if ticketBalance then ticketBalance:Destroy() end
+		if milestoneProgress then milestoneProgress:Destroy() end
+		if openShopButton then openShopButton:Destroy() end
+		warn("[RewardShop] Spec 007 HUD template incomplete; using legacy HUD")
+	end
 
 	local function activateSuborn(): ()
 		if
@@ -208,7 +256,8 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	outline(shop, Theme.Spotlight, 2)
 	if shop.Parent == root and shop:GetAttribute("StudioTemplate") == nil then
 		local templateShop = StudioTemplate.Find("RewardsShop.ShopPanel")
-		if templateShop and templateShop:IsA("Frame") then
+		if templateShop and templateShop:IsA("Frame")
+			and (studioV2 or templateShop:FindFirstChild("Spec007Marker") == nil) then
 			shop:Destroy()
 			shop = StudioTemplate.Clone("RewardsShop.ShopPanel", root, "Frame") :: Frame
 			shop:SetAttribute("StudioTemplate", true)
@@ -267,7 +316,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		nav.Parent = shop
 	end
 	local tabs: { [string]: TextButton } = {}
-	local tabLabels = { Fichas = "TICKETS", Cartelas = "CARDS", Poderes = "POWER UPS", Convites = "INVITES" }
+	local tabLabels = { Fichas = "TICKETS", Cartelas = "CARDS", Poderes = "BOOSTS", Convites = "INVITE" }
 	for _, tab in { "Fichas", "Cartelas", "Poderes", "Convites" } do
 		tabs[tab] = button(nav, tab, tabLabels[tab], function()
 			selectedTab = tab
@@ -292,15 +341,17 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		list = Instance.new("UIListLayout")
 		list.Parent = scroll
 	end
-	list.Padding = UDim.new(0, 10)
+	if not studioV2 then list.Padding = UDim.new(0, 10) end
 	list.SortOrder = Enum.SortOrder.LayoutOrder
 	local padding = scroll:FindFirstChildOfClass("UIPadding")
 	if not padding then
 		padding = Instance.new("UIPadding")
 		padding.Parent = scroll
 	end
-	padding.PaddingRight = UDim.new(0, 8)
-	padding.PaddingBottom = UDim.new(0, 8)
+	if not studioV2 then
+		padding.PaddingRight = UDim.new(0, 8)
+		padding.PaddingBottom = UDim.new(0, 8)
+	end
 
 	local notice = panel(shop, "Notice", Theme.Burgundy, 8, 48)
 	notice.Visible = false
@@ -328,13 +379,20 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local function promptPass(theme: any): ()
 		message(platform.PromptPass(theme, reward) or "")
 	end
+	local function purchaseStyle(object: TextButton, color: Color3, active: boolean): ()
+		if not studioV2 then return end
+		object.BackgroundColor3 = if active then color else Theme.Stage
+		object.BackgroundTransparency = if active then 0 else 0.55
+		object.TextColor3 = if active and color == Theme.Spotlight then Theme.Midnight else Theme.Paper
+		object.TextTransparency = if active then 0 else 0.35
+	end
 
 	local entries: { [string]: any } = {}
 	local previewArt: { ImageLabel } = {}
 	local function entry(tab: string, id: string, order: number, height: number, fill: Color3): any
 		local frame = panel(scroll, id, fill, 12, 44)
 		frame.LayoutOrder = order
-		frame.Size = UDim2.new(1, 0, 0, height)
+		if not studioV2 then frame.Size = UDim2.new(1, 0, 0, height) end
 		local result = { frame = frame, tab = tab, height = height }
 		entries[id] = result
 		return result
@@ -369,10 +427,11 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	local showcase = entry("Cartelas", "theme_showcase", 0, 238, DEEP_BLUE)
 	outline(showcase.frame, Theme.Spotlight, 2)
 	local templateCard = showcase.frame:FindFirstChild("BingoCard")
-	if templateCard then
+	if templateCard and not studioV2 then
 		templateCard:Destroy()
 	end
-	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end, nil)
+	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end,
+		if studioV2 and templateCard and templateCard:IsA("Frame") then templateCard else nil)
 	local sampleCells: { Types.CardCell } = {}
 	for index, number in PREVIEW_NUMBERS do
 		sampleCells[index] = { number = number, isFree = number == 0, isMarked = index == 2 or index == 9 }
@@ -501,6 +560,11 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 
 	layout = function(width: number, height: number): ()
 		lastSize = Vector2.new(width, height)
+		if studioV2 then
+			Surface.Rect(power, if width < 760 then (width - 232) / 2 else 20, height - (if width < 760 then 70 else 62), 232, 44)
+			showcaseCard.LayoutTheme()
+			return
+		end
 		local portrait = width < 760
 		local hudWidth = if portrait then math.min(270, width - 24) else 282
 		Surface.Rect(hud, if portrait then 12 else 20, if portrait then 216 else 236, hudWidth, 52)
@@ -643,7 +707,12 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			return
 		end
 		local isLobby = bingo == nil or not bingo.isParticipant
-		hud.Visible = isLobby
+		hud.Visible = isLobby and not separatedHud
+		if separatedHud then
+			(ticketBalance :: Frame).Visible = isLobby
+			(milestoneProgress :: Frame).Visible = isLobby
+			(openShopButton :: TextButton).Visible = isLobby
+		end
 		power.Visible = bingo ~= nil and bingo.isParticipant and bingo.phase == "CallingNumbers"
 		if not isLobby then
 			menuOpen = false
@@ -661,13 +730,15 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		showcaseFichas.Visible = selectedTheme ~= nil and selectedTheme.fichas >= 0 and not showcaseOwned
 		showcaseFichas.Text = if selectedTheme then `{selectedTheme.fichas} TICKETS` else ""
 		showcaseFichas.Active = selectedTheme ~= nil and ready and fichas >= selectedTheme.fichas
-		showcaseFichas.BackgroundColor3 = if showcaseFichas.Active then Theme.Spotlight else Theme.Disabled
+		showcaseFichas.BackgroundColor3 = if showcaseFichas.Active then Theme.Spotlight else (if studioV2 then Theme.Stage else Theme.Disabled)
+		purchaseStyle(showcaseFichas, Theme.Spotlight, showcaseFichas.Active)
 		showcaseRobux.Visible = not showcaseOwned
 		showcaseRobux.Text = if selectedTheme then `{prices[selectedTheme.passId] or selectedTheme.targetRobux} ROBUX{if prices[selectedTheme.passId] then "" else "*"}` else ""
 		showcaseRobux.Active = selectedTheme ~= nil and canPurchase and selectedTheme.passId > 0
 			and prices[selectedTheme.passId] ~= nil and (purchaseMode ~= "simulated" or platform.HasSimulatedPass())
-		showcaseRobux.BackgroundColor3 = if showcaseRobux.Active then Theme.Burgundy else Theme.Disabled
-		showcaseRobux.TextColor3 = if showcaseRobux.Active then Theme.White else Theme.Muted
+		showcaseRobux.BackgroundColor3 = if showcaseRobux.Active then (if studioV2 then Theme.Spotlight else Theme.Burgundy) else (if studioV2 then Theme.Stage else Theme.Disabled)
+		showcaseRobux.TextColor3 = if studioV2 then Theme.Midnight else (if showcaseRobux.Active then Theme.White else Theme.Muted)
+		purchaseStyle(showcaseRobux, Theme.Spotlight, showcaseRobux.Active)
 		showcaseEquip.Visible = showcaseOwned
 		showcaseEquip.Text = if ready and reward.equippedTheme == selectedThemeId then "EQUIPPED FOR MATCH" else "EQUIP FOR MATCH"
 		showcaseEquip.Active = showcaseOwned and reward.equippedTheme ~= selectedThemeId
@@ -679,13 +750,25 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		hudDaily.Text = if ready
 			then `MILESTONE {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
 			else "PLEASE WAIT"
+		if separatedHud then
+			local balanceText = (ticketBalance :: Frame):FindFirstChild("Fichas") :: TextLabel
+			local milestoneText = (milestoneProgress :: Frame):FindFirstChild("NextReward") :: TextLabel
+			balanceText.Text = hudBalance.Text
+			milestoneText.Text = hudDaily.Text
+			for dotIndex = 1, 7 do
+				local dot = (milestoneProgress :: Frame):FindFirstChild(`DailyDot{dotIndex}`)
+				if dot and dot:IsA("Frame") then
+					dot.BackgroundColor3 = if ready and dotIndex <= reward.dailyIndex then Theme.Mark else Theme.Stage
+				end
+			end
+		end
 		balance.Text = if ready then `{fichas} TICKETS` else "—"
 		if ready then
 			local index = reward.dailyIndex + 1
 			daily.Text = `Step {index}/7 · +{Catalog.DAILY_FICHAS[index]} Tickets`
 			dailyNote.Text = if reward.dailyReady then "Finish a match today" else "Come back tomorrow to advance"
 			for dotIndex, dot in dots do
-				dot.BackgroundColor3 = if dotIndex <= reward.dailyIndex then Theme.Mark else Theme.Disabled
+				dot.BackgroundColor3 = if dotIndex <= reward.dailyIndex then Theme.Mark else (if studioV2 then Theme.Stage else Theme.Disabled)
 			end
 		else
 			daily.Text = "Rewards unavailable"
@@ -746,10 +829,17 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			else (if lastSize.X < 760
 				then "Robux price confirmed by Roblox."
 				else "Robux price confirmed by Roblox. The platform verifies each purchase.")
+		if studioV2 then
+			commerceNote.Text = if selectedTab == "Convites" then ""
+				elseif purchaseMode == "simulated" and not unavailableOffer then "Studio demo: no Robux charged; progress is not saved."
+				elseif purchaseMode == "disabled" then "Purchases are unavailable in this test profile."
+				elseif unavailableOffer then "*Estimated Robux price; sale unavailable."
+				else "Robux price confirmed by Roblox."
+		end
 		for name, tab in tabs do
 			local selected = name == selectedTab
 			tab.BackgroundColor3 = if selected then Theme.Spotlight else Theme.Stage
-			tab.TextColor3 = if selected then Theme.Ink else Theme.Paper
+			tab.TextColor3 = if selected then (if studioV2 then Theme.Midnight else Theme.Ink) else Theme.Paper
 		end
 		for _, row in entries do
 			row.frame.Visible = row.tab == selectedTab
@@ -760,8 +850,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 				`{prices[pack.productId] or pack.targetRobux} ROBUX{if prices[pack.productId] then "" else "*"}`
 			row.buy.Active = canPurchase and pack.productId > 0 and prices[pack.productId] ~= nil
 			row.buy.AutoButtonColor = row.buy.Active
-			row.buy.BackgroundColor3 = if row.buy.Active then Theme.Stage else Theme.Disabled
-			row.buy.TextColor3 = if row.buy.Active then Theme.White else Theme.Muted
+			row.buy.BackgroundColor3 = if row.buy.Active then (if studioV2 then Theme.Spotlight else Theme.Stage) else (if studioV2 then Theme.Stage else Theme.Disabled)
+			row.buy.TextColor3 = if studioV2 then Theme.Midnight else (if row.buy.Active then Theme.White else Theme.Muted)
+			purchaseStyle(row.buy, Theme.Spotlight, row.buy.Active)
 		end
 		for _, theme in Catalog.THEMES do
 			local row = entries[theme.id]
@@ -772,8 +863,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			row.fichas.Visible = theme.fichas >= 0 and not owned
 			row.fichas.Text = `{theme.fichas} TICKETS`
 			row.fichas.Active = ready and fichas >= theme.fichas
-			row.fichas.BackgroundColor3 = if row.fichas.Active then Theme.Stage else Theme.Disabled
-			row.fichas.TextColor3 = if row.fichas.Active then Theme.White else Theme.Muted
+			row.fichas.BackgroundColor3 = if row.fichas.Active then Theme.Stage else (if studioV2 then Theme.Stage else Theme.Disabled)
+			row.fichas.TextColor3 = if studioV2 then Theme.Paper else (if row.fichas.Active then Theme.White else Theme.Muted)
+			purchaseStyle(row.fichas, Theme.Stage, row.fichas.Active)
 			row.robux.Visible = not owned
 			row.robux.Text =
 				`{prices[theme.passId] or theme.targetRobux} ROBUX{if prices[theme.passId] then "" else "*"}`
@@ -781,8 +873,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 				and (purchaseMode ~= "simulated" or platform.HasSimulatedPass())
 				and theme.passId > 0
 				and prices[theme.passId] ~= nil
-			row.robux.BackgroundColor3 = if row.robux.Active then Theme.Burgundy else Theme.Disabled
-			row.robux.TextColor3 = if row.robux.Active then Theme.White else Theme.Muted
+			row.robux.BackgroundColor3 = if row.robux.Active then (if studioV2 then Theme.Spotlight else Theme.Burgundy) else (if studioV2 then Theme.Stage else Theme.Disabled)
+			row.robux.TextColor3 = if studioV2 then Theme.Midnight else (if row.robux.Active then Theme.White else Theme.Muted)
+			purchaseStyle(row.robux, Theme.Spotlight, row.robux.Active)
 			row.equip.Visible = owned
 			row.equip.Text = if ready and reward.equippedTheme == theme.id then "EQUIPPED" else "EQUIP"
 			row.equip.Active = owned and reward.equippedTheme ~= theme.id
@@ -793,8 +886,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		end
 		powerRow.stock.Text = `IN STOCK: {if ready then reward.suborns else 0}`
 		powerRow.fichas.Active = ready and fichas >= Catalog.SUBORN_FICHAS
-		powerRow.fichas.BackgroundColor3 = if powerRow.fichas.Active then Theme.Stage else Theme.Disabled
-		powerRow.fichas.TextColor3 = if powerRow.fichas.Active then Theme.White else Theme.Muted
+		powerRow.fichas.BackgroundColor3 = if powerRow.fichas.Active then Theme.Stage else (if studioV2 then Theme.Stage else Theme.Disabled)
+		powerRow.fichas.TextColor3 = if studioV2 then Theme.Paper else (if powerRow.fichas.Active then Theme.White else Theme.Muted)
+		purchaseStyle(powerRow.fichas, Theme.Stage, powerRow.fichas.Active)
 		powerRow.robux.Text =
 			`{prices[Catalog.SUBORN_PRODUCT_ID] or Catalog.SUBORN_TARGET_ROBUX} ROBUX{if prices[Catalog.SUBORN_PRODUCT_ID]
 				then ""
@@ -802,8 +896,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		powerRow.robux.Active = canPurchase
 			and Catalog.SUBORN_PRODUCT_ID > 0
 			and prices[Catalog.SUBORN_PRODUCT_ID] ~= nil
-		powerRow.robux.BackgroundColor3 = if powerRow.robux.Active then Theme.Burgundy else Theme.Disabled
-		powerRow.robux.TextColor3 = if powerRow.robux.Active then Theme.White else Theme.Muted
+		powerRow.robux.BackgroundColor3 = if powerRow.robux.Active then (if studioV2 then Theme.Spotlight else Theme.Burgundy) else (if studioV2 then Theme.Stage else Theme.Disabled)
+		powerRow.robux.TextColor3 = if studioV2 then Theme.Midnight else (if powerRow.robux.Active then Theme.White else Theme.Muted)
+		purchaseStyle(powerRow.robux, Theme.Spotlight, powerRow.robux.Active)
 	end
 
 	local menu = {}
