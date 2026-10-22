@@ -1,5 +1,6 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 local Catalog = require(ReplicatedStorage.Shared.Features.RewardsShop.RewardCatalog)
 local Types = require(ReplicatedStorage.Shared.Features.Bingo.BingoTypes)
 local BingoCard = require(script.Parent.Parent.Bingo.Components.BingoCard)
@@ -94,16 +95,49 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		return object
 	end
 
-	local hud = panel(root, "RewardsHud", DEEP_BLUE, 14, 31)
-	outline(hud, Theme.Spotlight, 2)
-	local hudBalance = label(hud, "Fichas", "0 TICKETS", 18, Theme.Paper, Theme.Display, 32)
-	local hudDaily = label(hud, "NextReward", "NEXT MILESTONE", 11, SOFT_GOLD, Theme.Body, 32)
-	local hudOpen = button(hud, "OpenShop", "OPEN SHOP", function()
-		menuOpen = true
-		render()
-	end, Theme.Spotlight, 32)
+	local hud: Frame
+	local hudBalance: TextLabel
+	local hudDaily: TextLabel
+	local hudOpen: TextButton
+	local designGui: Instance? = StarterGui:FindFirstChild("BingoGuiDesign")
+	if not designGui and gui.Parent then
+		designGui = gui.Parent:FindFirstChild("BingoGuiDesign")
+	end
+	local designRewardsShop = designGui and designGui:FindFirstChild("RewardsShop")
+	local designHud = designRewardsShop and designRewardsShop:FindFirstChild("RewardsHud")
+	local designBalance = designHud and designHud:FindFirstChild("Fichas")
+	local designDaily = designHud and designHud:FindFirstChild("NextReward")
+	local designOpen = designHud and designHud:FindFirstChild("OpenShop")
+	local hasStudioHud = designHud ~= nil
+		and designHud:IsA("Frame")
+		and designBalance ~= nil
+		and designBalance:IsA("TextLabel")
+		and designDaily ~= nil
+		and designDaily:IsA("TextLabel")
+		and designOpen ~= nil
+		and designOpen:IsA("TextButton")
+	if hasStudioHud then
+		hud = (designHud :: Frame):Clone()
+		hud.Parent = root
+		hudBalance = hud:FindFirstChild("Fichas") :: TextLabel
+		hudDaily = hud:FindFirstChild("NextReward") :: TextLabel
+		hudOpen = hud:FindFirstChild("OpenShop") :: TextButton
+		table.insert(connections, hudOpen.Activated:Connect(function()
+			menuOpen = true
+			render()
+		end))
+	else
+		hud = panel(root, "RewardsHud", DEEP_BLUE, 14, 31)
+		outline(hud, Theme.Spotlight, 2)
+		hudBalance = label(hud, "Fichas", "0 TICKETS", 18, Theme.Paper, Theme.Display, 32)
+		hudDaily = label(hud, "NextReward", "NEXT MILESTONE", 11, SOFT_GOLD, Theme.Body, 32)
+		hudOpen = button(hud, "OpenShop", "OPEN SHOP", function()
+			menuOpen = true
+			render()
+		end, Theme.Spotlight, 32)
+	end
 
-	local power = button(root, "UseSuborn", "BRIBE THE MC", function()
+	local function activateSuborn(): ()
 		if
 			reward
 			and reward.ready
@@ -115,7 +149,16 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		then
 			fire("Activate")
 		end
-	end, Theme.Burgundy, 32)
+	end
+	local designPower = designRewardsShop and designRewardsShop:FindFirstChild("UseSuborn")
+	local power: TextButton
+	if designPower and designPower:IsA("TextButton") then
+		power = designPower:Clone()
+		power.Parent = root
+		table.insert(connections, power.Activated:Connect(activateSuborn))
+	else
+		power = button(root, "UseSuborn", "BRIBE THE MC", activateSuborn, Theme.Burgundy, 32)
+	end
 
 	local shade = Instance.new("TextButton")
 	shade.Name = "ShopShade"

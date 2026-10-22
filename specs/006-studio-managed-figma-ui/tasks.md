@@ -32,6 +32,10 @@
 ## Migração por tela
 
 - [ ] Migrar shared HUD (desktop/mobile), saldo, progresso diário, loja e áudio.
+  - [x] Fazer o primeiro corte: clonar `RewardsShop > RewardsHud` do template e bindar saldo, marco e ação `OpenShop`, com construtor anterior como fallback.
+  - [x] Clonar `MusicToggle` e `EffectsToggle` do template, preservando handlers e estado de áudio existentes.
+  - [x] Clonar `RewardsShop > UseSuborn` do template, preservando as validações e a ação existentes.
+  - [ ] Validar o corte em Studio desktop/mobile antes de marcar a fatia como migrada.
 - [ ] Migrar LobbyView preservando estado de fila e retry.
 - [ ] Migrar IntroView preservando falas, skip e preview da cartela.
 - [ ] Migrar MatchView preservando chamadas, marcações, race, history, Suborno e pause.

@@ -1,6 +1,7 @@
 --!strict
 -- Local music and short confirmation effects; sound never carries gameplay state.
 local SoundService = game:GetService("SoundService")
+local StarterGui = game:GetService("StarterGui")
 local Config = require(game:GetService("ReplicatedStorage").Shared.Features.Bingo.BingoConfig)
 local Theme = require(script.Parent.Parent.Parent.UI.Theme)
 
@@ -18,6 +19,13 @@ local function makeSound(name: string, soundId: string, volume: number): Sound
 end
 
 local function makeToggle(parent: Instance, name: string, top: number): TextButton
+	local design = StarterGui:FindFirstChild("BingoGuiDesign")
+	local template = design and design:FindFirstChild(name)
+	if template and template:IsA("TextButton") then
+		local button = template:Clone()
+		button.Parent = parent
+		return button
+	end
 	local button = Instance.new("TextButton")
 	button.Name = name
 	button.AnchorPoint = Vector2.new(1, 0)
