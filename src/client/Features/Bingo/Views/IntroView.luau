@@ -3,29 +3,77 @@ local UI = script.Parent.Parent.Parent.Parent.UI
 local Surface = require(UI.Surface)
 local Theme = require(UI.Theme)
 local Button = require(UI.ActionButton)
+local StarterGui = game:GetService("StarterGui")
 local Card = require(script.Parent.Parent.Components.BingoCard)
 local State = require(script.Parent.Parent.PresentationState)
 local TweenService = game:GetService("TweenService")
 local View = {}
 function View.new(parent: Instance, skip: () -> ())
-	local root = Instance.new("Frame")
-	root.Name = "IntroView"
-	root.BackgroundTransparency = 1
-	root.Size = UDim2.fromScale(1, 1)
-	root.Parent = parent
+	local design = StarterGui:FindFirstChild("BingoGuiDesign")
+	local content = design and design:FindFirstChild("Content")
+	local template = content and content:FindFirstChild("IntroView")
+	local templateCaption = template and template:FindFirstChild("Caption")
+	local templateSpeaker = templateCaption and templateCaption:FindFirstChild("Speaker")
+	local templateInstruction = templateCaption and templateCaption:FindFirstChild("Instruction")
+	local templateAction = templateCaption and templateCaption:FindFirstChild("Action")
+	local templateWaiting = templateCaption and templateCaption:FindFirstChild("Waiting")
+	local templateCard = template and template:FindFirstChild("BingoCard")
+	local hasStudioTemplate = template ~= nil
+		and template:IsA("Frame")
+		and templateCaption ~= nil
+		and templateCaption:IsA("Frame")
+		and templateSpeaker ~= nil
+		and templateSpeaker:IsA("TextLabel")
+		and templateInstruction ~= nil
+		and templateInstruction:IsA("TextLabel")
+		and templateAction ~= nil
+		and templateAction:IsA("TextButton")
+		and templateWaiting ~= nil
+		and templateWaiting:IsA("TextLabel")
+		and templateCard ~= nil
+		and templateCard:IsA("Frame")
+	local root: Frame
+	local caption: Frame
+	local speaker: TextLabel
+	local instruction: TextLabel
+	local actionButton: TextButton
+	local waiting: TextLabel
+	local actionController: any? = nil
+	local actionConnection: RBXScriptConnection? = nil
+	if hasStudioTemplate then
+		root = (template :: Frame):Clone()
+		local cardPlaceholder = root:FindFirstChild("BingoCard")
+		if cardPlaceholder then
+			cardPlaceholder:Destroy()
+		end
+		root.Parent = parent
+		caption = root:FindFirstChild("Caption") :: Frame
+		speaker = caption:FindFirstChild("Speaker") :: TextLabel
+		instruction = caption:FindFirstChild("Instruction") :: TextLabel
+		actionButton = caption:FindFirstChild("Action") :: TextButton
+		waiting = caption:FindFirstChild("Waiting") :: TextLabel
+		actionConnection = actionButton.Activated:Connect(skip)
+	else
+		root = Instance.new("Frame")
+		root.Name = "IntroView"
+		root.BackgroundTransparency = 1
+		root.Size = UDim2.fromScale(1, 1)
+		root.Parent = parent
+		caption = Surface.Panel(root, "Caption", Theme.Midnight, 10)
+		local captionStroke = Instance.new("UIStroke")
+		captionStroke.Color = Theme.Spotlight
+		captionStroke.Thickness = 2
+		captionStroke.Parent = caption
+		speaker = Surface.Text(caption, "Speaker", 14, Theme.Spotlight, Theme.Bold)
+		instruction = Surface.Text(caption, "Instruction", 16, Theme.Paper)
+		waiting = Surface.Text(caption, "Waiting", 14, Theme.Spotlight, Theme.Bold)
+		actionController = Button.new(caption, "Skip scene", skip)
+		actionButton = actionController.Instance
+	end
 	local card = Card.new(root, function(_index: number) end)
 	local scale = Instance.new("UIScale")
 	scale.Parent = card.Instance
 	local reveal: Tween? = nil
-	local caption = Surface.Panel(root, "Caption", Theme.Midnight, 10)
-	local captionStroke = Instance.new("UIStroke")
-	captionStroke.Color = Theme.Spotlight
-	captionStroke.Thickness = 2
-	captionStroke.Parent = caption
-	local speaker = Surface.Text(caption, "Speaker", 14, Theme.Spotlight, Theme.Bold)
-	local instruction = Surface.Text(caption, "Instruction", 16, Theme.Paper)
-	local action = Button.new(caption, "Skip scene", skip)
-	local waiting = Surface.Text(caption, "Waiting", 14, Theme.Spotlight, Theme.Bold)
 	local view = { Instance = root }
 	function view.Layout(width: number, height: number, touch: boolean): ()
 		local portrait = width < height and width < 760
@@ -36,7 +84,7 @@ function View.new(parent: Instance, skip: () -> ())
 		Surface.Rect(caption, (width - captionW) / 2, y, captionW, captionH)
 		Surface.Rect(speaker, 14, 8, captionW - 28, 20)
 		Surface.Rect(instruction, 14, 30, captionW - 144, captionH - 42)
-		Surface.Rect(action.Instance, captionW - 120, captionH - 58, 106, 44)
+		Surface.Rect(actionButton, captionW - 120, captionH - 58, 106, 44)
 		Surface.Rect(waiting, captionW - 120, 30, 106, captionH - 40)
 		local cw = if portrait
 			then math.min(190, math.max(140, y - 172))
@@ -67,7 +115,7 @@ function View.new(parent: Instance, skip: () -> ())
 		end
 		speaker.Text = if model.sceneActive then "BINGO MC · " .. model.title else "YOUR CARD IS READY"
 		instruction.Text = model.detail
-		action.Instance.Visible = model.sceneActive
+		actionButton.Visible = model.sceneActive
 		waiting.Visible = not model.sceneActive
 		waiting.Text = `Starting soon…\n{model.seconds}s`
 		card.Render(snapshot.card, "preview", {})
@@ -77,7 +125,12 @@ function View.new(parent: Instance, skip: () -> ())
 	end
 	function view.Destroy(): ()
 		view.Exit()
-		action.Destroy()
+		if actionConnection then
+			actionConnection:Disconnect()
+		end
+		if actionController then
+			actionController.Destroy()
+		end
 		card.Destroy()
 		root:Destroy()
 	end

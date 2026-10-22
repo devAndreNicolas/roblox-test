@@ -40,6 +40,8 @@
   - [x] Clonar `Content > LobbyView` do template e bindar textos/status/retry; manter o construtor anterior como fallback.
   - [ ] Validar estados de fila, retry e responsividade em playtest.
 - [ ] Migrar IntroView preservando falas, skip e preview da cartela.
+  - [x] Clonar `Content > IntroView`, bindar caption/skip e manter cartela dinâmica; manter o construtor anterior como fallback.
+  - [ ] Validar falas, skip e cartela com tema equipado em playtest.
 - [ ] Migrar MatchView preservando chamadas, marcações, race, history, Suborno e pause.
 - [ ] Migrar ResultsView preservando win/loss/draw, detalhes e skip.
   - [x] Clonar `Content > ResultsView` e bindar resultado, animação de entrada e skip; manter o construtor anterior como fallback.
