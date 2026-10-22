@@ -23,52 +23,94 @@ local function createRow(parent: Instance, index: number): Row
 	return { frame = frame, rank = rank, name = name, remaining = remaining }
 end
 
-function Race.new(parent: Instance)
-	local root = Surface.Panel(parent, "BingoRace", Theme.Ink, 10)
-	root.ZIndex = 10
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Theme.Spotlight
-	stroke.Thickness = 1
-	stroke.Transparency = 0.5
-	stroke.Parent = root
-	local toggle = Instance.new("TextButton")
-	toggle.Name = "ExpandRace"
-	toggle.BackgroundTransparency = 1
-	toggle.Text = "BINGO RACE  ▼"
-	toggle.TextColor3 = Theme.Spotlight
-	toggle.Font = Theme.Bold
-	toggle.TextSize = 14
-	toggle.TextXAlignment = Enum.TextXAlignment.Left
+function Race.new(parent: Instance, templateRoot: Frame?)
+	local root = templateRoot or Surface.Panel(parent, "BingoRace", Theme.Ink, 10)
+	local isStudioTemplate = templateRoot ~= nil
+	if not isStudioTemplate then
+		root.ZIndex = 10
+	end
+	local stroke = root:FindFirstChildOfClass("UIStroke") :: UIStroke?
+	if not stroke then
+		stroke = Instance.new("UIStroke")
+		stroke.Color = Theme.Spotlight
+		stroke.Thickness = 1
+		stroke.Transparency = 0.5
+		stroke.Parent = root
+	end
+	local toggleChild = root:FindFirstChild("ExpandRace")
+	local toggle = if toggleChild and toggleChild:IsA("TextButton") then toggleChild else Instance.new("TextButton")
+	if not toggleChild then
+		toggle.Name = "ExpandRace"
+		toggle.BackgroundTransparency = 1
+		toggle.Text = "BINGO RACE  ▼"
+		toggle.TextColor3 = Theme.Spotlight
+		toggle.Font = Theme.Bold
+		toggle.TextSize = 14
+		toggle.TextXAlignment = Enum.TextXAlignment.Left
+		toggle.ZIndex = 12
+		toggle.Parent = root
+	end
 	toggle.Selectable = true
-	toggle.ZIndex = 12
-	toggle.Parent = root
-	local leader = Surface.Text(root, "Leader", 14, Theme.Paper, Theme.Bold)
-	local second = Surface.Text(root, "Second", 13, Theme.Paper)
-	local own = Surface.Text(root, "Own", 13, Theme.Spotlight, Theme.Bold)
+	local leaderChild = root:FindFirstChild("Leader")
+	local leader = if leaderChild and leaderChild:IsA("TextLabel")
+		then leaderChild
+		else Surface.Text(root, "Leader", 14, Theme.Paper, Theme.Bold)
+	local secondChild = root:FindFirstChild("Second")
+	local second = if secondChild and secondChild:IsA("TextLabel")
+		then secondChild
+		else Surface.Text(root, "Second", 13, Theme.Paper)
+	local ownChild = root:FindFirstChild("Own")
+	local own = if ownChild and ownChild:IsA("TextLabel") then ownChild else Surface.Text(root, "Own", 13, Theme.Spotlight, Theme.Bold)
+	if not isStudioTemplate then
+		leader.ZIndex = 12
+		second.ZIndex = 12
+		own.ZIndex = 12
+	end
 	for _, label in { leader, second, own } do
-		label.ZIndex = 12
 		label.TextTruncate = Enum.TextTruncate.AtEnd
 	end
-	local details = Instance.new("ScrollingFrame")
-	details.Name = "AllPlayers"
-	details.BackgroundColor3 = Theme.Ink
-	details.BorderSizePixel = 0
-	details.ScrollBarThickness = 4
-	details.ScrollBarImageColor3 = Theme.Spotlight
-	details.ScrollingDirection = Enum.ScrollingDirection.Y
-	details.ClipsDescendants = true
-	details.ZIndex = 11
+	local detailsChild = root:FindFirstChild("AllPlayers")
+	local details = if detailsChild and detailsChild:IsA("ScrollingFrame")
+		then detailsChild
+		else Instance.new("ScrollingFrame")
+	if not detailsChild then
+		details.Name = "AllPlayers"
+		details.BackgroundColor3 = Theme.Ink
+		details.BorderSizePixel = 0
+		details.ScrollBarThickness = 4
+		details.ScrollBarImageColor3 = Theme.Spotlight
+		details.ScrollingDirection = Enum.ScrollingDirection.Y
+		details.ClipsDescendants = true
+		details.ZIndex = 11
+		details.Parent = root
+	end
 	details.Visible = false
-	details.Parent = root
-	local detailsCorner = Instance.new("UICorner")
-	detailsCorner.CornerRadius = UDim.new(0, 10)
-	detailsCorner.Parent = details
-	local detailsTitle = Surface.Text(details, "DetailsTitle", 16, Theme.Spotlight, Theme.Display)
+	if not details:FindFirstChildOfClass("UICorner") then
+		local detailsCorner = Instance.new("UICorner")
+		detailsCorner.CornerRadius = UDim.new(0, 10)
+		detailsCorner.Parent = details
+	end
+	local titleChild = details:FindFirstChild("DetailsTitle")
+	local detailsTitle = if titleChild and titleChild:IsA("TextLabel")
+		then titleChild
+		else Surface.Text(details, "DetailsTitle", 16, Theme.Spotlight, Theme.Display)
 	detailsTitle.Text = "ALL PLAYERS"
-	detailsTitle.ZIndex = 12
+	if not isStudioTemplate then
+		detailsTitle.ZIndex = 12
+	end
 	local rows: { Row } = {}
 	for index = 1, 8 do
-		rows[index] = createRow(details, index)
+		local existing = if isStudioTemplate then details:FindFirstChild(`Row{index}`) else nil
+		if existing and existing:IsA("Frame") then
+			rows[index] = {
+				frame = existing,
+				rank = existing:FindFirstChild("Rank") :: TextLabel,
+				name = existing:FindFirstChild("Name") :: TextLabel,
+				remaining = existing:FindFirstChild("Remaining") :: TextLabel,
+			}
+		else
+			rows[index] = createRow(details, index)
+		end
 	end
 	local expanded = false
 	local narrow = false

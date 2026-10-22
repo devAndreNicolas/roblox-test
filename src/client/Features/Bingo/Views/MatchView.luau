@@ -6,42 +6,69 @@ local Card = require(script.Parent.Parent.Components.BingoCard)
 local Ball = require(script.Parent.Parent.Components.CallBall)
 local Race = require(script.Parent.Parent.Components.BingoRace)
 local Players = game:GetService("Players")
+local StudioTemplate = require(UI.StudioTemplate)
 local State = require(script.Parent.Parent.PresentationState)
 local View = {}
+
+local function getFrame(parent: Instance, name: string, color: Color3, radius: number?): Frame
+	local child = parent:FindFirstChild(name)
+	if child and child:IsA("Frame") then
+		return child
+	end
+	return Surface.Panel(parent, name, color, radius)
+end
+
+local function getText(parent: Instance, name: string, size: number, color: Color3, font: Enum.Font?): TextLabel
+	local child = parent:FindFirstChild(name)
+	if child and child:IsA("TextLabel") then
+		return child
+	end
+	return Surface.Text(parent, name, size, color, font)
+end
+
 function View.new(parent: Instance, onMark: (number) -> ())
-	local root = Instance.new("Frame")
-	root.Name = "MatchView"
-	root.BackgroundTransparency = 1
-	root.Size = UDim2.fromScale(1, 1)
-	root.Parent = parent
-	local call = Surface.Panel(root, "Call", Theme.Ink)
-	local callStroke = Instance.new("UIStroke")
-	callStroke.Color = Theme.Spotlight
-	callStroke.Thickness = 2
-	callStroke.Transparency = 0.25
-	callStroke.Parent = call
-	local ball = Ball.new(call)
-	local caption = Surface.Text(call, "Caption", 13, Theme.Spotlight, Theme.Bold)
+	local templateRoot = StudioTemplate.Clone("Content.MatchView", parent, "Frame")
+	local root: Frame
+	if templateRoot and templateRoot:IsA("Frame") then
+		root = templateRoot
+	else
+		root = Instance.new("Frame")
+		root.Name = "MatchView"
+		root.BackgroundTransparency = 1
+		root.Size = UDim2.fromScale(1, 1)
+		root.Parent = parent
+	end
+	local call = getFrame(root, "Call", Theme.Ink)
+	if not call:FindFirstChildOfClass("UIStroke") then
+		local callStroke = Instance.new("UIStroke")
+		callStroke.Color = Theme.Spotlight
+		callStroke.Thickness = 2
+		callStroke.Transparency = 0.25
+		callStroke.Parent = call
+	end
+	local ballTemplate = call:FindFirstChild("CallBall")
+	local ball = Ball.new(call, if ballTemplate and ballTemplate:IsA("Frame") then ballTemplate else nil)
+	local caption = getText(call, "Caption", 13, Theme.Spotlight, Theme.Bold)
 	caption.Text = "● LIVE  /  CURRENT CALL"
-	local timing = Surface.Text(call, "Timing", 16, Theme.White)
-	local progressBack = Surface.Panel(call, "Track", Theme.Muted, 4)
-	local progress = Surface.Panel(progressBack, "Progress", Theme.Spotlight, 4)
-	local card = Card.new(root, onMark)
-	local race = Race.new(root)
+	local timing = getText(call, "Timing", 16, Theme.White)
+	local progressBack = getFrame(call, "Track", Theme.Muted, 4)
+	local progress = getFrame(progressBack, "Progress", Theme.Spotlight, 4)
+	local cardTemplate = root:FindFirstChild("BingoCard")
+	local card = Card.new(root, onMark, if cardTemplate and cardTemplate:IsA("Frame") then cardTemplate else nil)
+	local raceTemplate = root:FindFirstChild("BingoRace")
+	local race = Race.new(root, if raceTemplate and raceTemplate:IsA("Frame") then raceTemplate else nil)
 	local lastMatchId: number? = nil
-	local history = Surface.Text(root, "History", 14, Theme.Paper, Theme.Bold)
-	local reminder = Surface.Text(root, "Reminder", 16, Theme.Paper)
-	local historyPanel = Surface.Panel(root, "HistorySurface", Theme.Ink, 12)
-	local historyAccent = Surface.Panel(historyPanel, "GoldRule", Theme.Spotlight, 0)
-	history.Parent = historyPanel
-	reminder.Parent = historyPanel
-	local subornPanel = Surface.Panel(root, "SubornAnnouncement", Theme.Burgundy, 14)
+	local historyPanel = getFrame(root, "HistorySurface", Theme.Ink, 12)
+	local history = getText(historyPanel, "History", 14, Theme.Paper, Theme.Bold)
+	local reminder = getText(historyPanel, "Reminder", 16, Theme.Paper)
+	local historyAccent = getFrame(historyPanel, "GoldRule", Theme.Spotlight, 0)
+	local subornPanel = getFrame(root, "SubornAnnouncement", Theme.Burgundy, 14)
 	subornPanel.ZIndex = 12
 	subornPanel.Visible = false
-	local subornTitle = Surface.Text(subornPanel, "SubornTitle", 24, Theme.White, Theme.Display)
+	local subornTitle = getText(subornPanel, "SubornTitle", 24, Theme.White, Theme.Display)
 	subornTitle.ZIndex = 13
 	subornTitle.TextXAlignment = Enum.TextXAlignment.Center
-	local subornDetail = Surface.Text(subornPanel, "SubornDetail", 16, Theme.White, Theme.Bold)
+	local subornDetail = getText(subornPanel, "SubornDetail", 16, Theme.White, Theme.Bold)
 	subornDetail.ZIndex = 13
 	subornDetail.TextXAlignment = Enum.TextXAlignment.Center
 	local view = { Instance = root }

@@ -35,11 +35,13 @@ function StudioTemplate.Find(path: string): Instance?
 end
 
 function StudioTemplate.Clone(path: string, parent: Instance, expectedClass: string): Instance?
+	local Surface = require(script.Parent.Surface)
 	local source = StudioTemplate.Find(path)
 	if not source or not source:IsA(expectedClass) then
 		return nil
 	end
 	local clone = source:Clone()
+	Surface.BindStudioOverrides(clone)
 	clone.Parent = parent
 	return clone
 end

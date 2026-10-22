@@ -40,10 +40,6 @@ function View.new(parent: Instance, skip: () -> ())
 	local actionConnection: RBXScriptConnection? = nil
 	if hasStudioTemplate then
 		root = StudioTemplate.Clone("Content.IntroView", parent, "Frame") :: Frame
-		local cardPlaceholder = root:FindFirstChild("BingoCard")
-		if cardPlaceholder then
-			cardPlaceholder:Destroy()
-		end
 		caption = root:FindFirstChild("Caption") :: Frame
 		speaker = caption:FindFirstChild("Speaker") :: TextLabel
 		instruction = caption:FindFirstChild("Instruction") :: TextLabel
@@ -67,7 +63,8 @@ function View.new(parent: Instance, skip: () -> ())
 		actionController = Button.new(caption, "Skip scene", skip)
 		actionButton = actionController.Instance
 	end
-	local card = Card.new(root, function(_index: number) end)
+	local cardTemplate = root:FindFirstChild("BingoCard")
+	local card = Card.new(root, function(_index: number) end, if cardTemplate and cardTemplate:IsA("Frame") then cardTemplate else nil)
 	local scale = Instance.new("UIScale")
 	scale.Parent = card.Instance
 	local reveal: Tween? = nil

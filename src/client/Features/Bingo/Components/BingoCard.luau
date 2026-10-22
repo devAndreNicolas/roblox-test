@@ -30,60 +30,84 @@ function Card.VisualTheme(themeId: string): (Color3?, Color3?, string?)
 	return nil, nil, nil
 end
 
-function Card.new(parent: Instance, intent: (number) -> ())
-	local root = Surface.Panel(parent, "BingoCard", Theme.Paper)
-	local border = Instance.new("UIStroke")
-	border.Color = Theme.Stage
-	border.Thickness = 3
-	border.Parent = root
-	local artwork = Instance.new("ImageLabel")
-	artwork.Name = "ThemeArtwork"
-	artwork.BackgroundTransparency = 1
-	artwork.Size = UDim2.fromScale(1, 1)
-	artwork.Visible = false
-	artwork.Parent = root
-	local headerBand = Instance.new("Frame")
-	headerBand.Name = "ThemeHeader"
-	headerBand.BorderSizePixel = 0
-	headerBand.Position = UDim2.fromOffset(4, 4)
-	headerBand.Size = UDim2.new(1, -8, 0, 34)
-	headerBand.BackgroundColor3 = Theme.Stage
-	headerBand.Parent = root
-	local bandCorner = Instance.new("UICorner")
-	bandCorner.CornerRadius = UDim.new(0, 10)
-	bandCorner.Parent = headerBand
-	local headers = Instance.new("Frame")
-	headers.Name = "Columns"
-	headers.BackgroundTransparency = 1
-	headers.Position = UDim2.fromOffset(12, 8)
-	headers.Size = UDim2.new(1, -24, 0, 28)
-	headers.Parent = root
-	local headerLayout = Instance.new("UIGridLayout")
-	headerLayout.CellSize = UDim2.new(0.2, -5, 1, 0)
-	headerLayout.CellPadding = UDim2.fromOffset(6, 0)
-	headerLayout.FillDirectionMaxCells = 5
-	headerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	headerLayout.Parent = headers
+function Card.new(parent: Instance, intent: (number) -> (), templateRoot: Frame?)
+	local root = templateRoot or Surface.Panel(parent, "BingoCard", Theme.Paper)
+	local isStudioTemplate = templateRoot ~= nil
+	local border: UIStroke
+	local artwork: ImageLabel
+	local headerBand: Frame
+	local headers: Frame
+	local grid: Frame
+	local headerLayout: UIGridLayout
+	if isStudioTemplate then
+		border = root:FindFirstChildOfClass("UIStroke") :: UIStroke
+		artwork = root:FindFirstChild("ThemeArtwork") :: ImageLabel
+		headerBand = root:FindFirstChild("ThemeHeader") :: Frame
+		headers = root:FindFirstChild("Columns") :: Frame
+		grid = root:FindFirstChild("Cells") :: Frame
+		headerLayout = headers:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout
+	else
+		border = Instance.new("UIStroke")
+		border.Color = Theme.Stage
+		border.Thickness = 3
+		border.Parent = root
+		artwork = Instance.new("ImageLabel")
+		artwork.Name = "ThemeArtwork"
+		artwork.BackgroundTransparency = 1
+		artwork.Size = UDim2.fromScale(1, 1)
+		artwork.Visible = false
+		artwork.Parent = root
+		headerBand = Instance.new("Frame")
+		headerBand.Name = "ThemeHeader"
+		headerBand.BorderSizePixel = 0
+		headerBand.Position = UDim2.fromOffset(4, 4)
+		headerBand.Size = UDim2.new(1, -8, 0, 34)
+		headerBand.BackgroundColor3 = Theme.Stage
+		headerBand.Parent = root
+		local bandCorner = Instance.new("UICorner")
+		bandCorner.CornerRadius = UDim.new(0, 10)
+		bandCorner.Parent = headerBand
+		headers = Instance.new("Frame")
+		headers.Name = "Columns"
+		headers.BackgroundTransparency = 1
+		headers.Position = UDim2.fromOffset(12, 8)
+		headers.Size = UDim2.new(1, -24, 0, 28)
+		headers.Parent = root
+		headerLayout = Instance.new("UIGridLayout")
+		headerLayout.CellSize = UDim2.new(0.2, -5, 1, 0)
+		headerLayout.CellPadding = UDim2.fromOffset(6, 0)
+		headerLayout.FillDirectionMaxCells = 5
+		headerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		headerLayout.Parent = headers
+		grid = Instance.new("Frame")
+		grid.Name = "Cells"
+		grid.BackgroundTransparency = 1
+		grid.Position = UDim2.fromOffset(12, 40)
+		grid.Size = UDim2.new(1, -24, 1, -52)
+		grid.Parent = root
+	end
 	local headerLabels: { TextLabel } = {}
 	for index, letter in { "B", "I", "N", "G", "O" } do
-		local label = Surface.Text(headers, letter, 18, Theme.White, Theme.Display)
-		label.Text = letter
-		label.TextXAlignment = Enum.TextXAlignment.Center
-		label.LayoutOrder = index
+		local label: TextLabel
+		if isStudioTemplate then
+			label = headers:FindFirstChild(letter) :: TextLabel
+		else
+			label = Surface.Text(headers, letter, 18, Theme.White, Theme.Display)
+			label.Text = letter
+			label.TextXAlignment = Enum.TextXAlignment.Center
+			label.LayoutOrder = index
+		end
 		headerLabels[index] = label
 	end
-	local grid = Instance.new("Frame")
-	grid.Name = "Cells"
-	grid.BackgroundTransparency = 1
-	grid.Position = UDim2.fromOffset(12, 40)
-	grid.Size = UDim2.new(1, -24, 1, -52)
-	grid.Parent = root
-	local layout = Instance.new("UIGridLayout")
-	layout.CellSize = UDim2.new(0.2, -5, 0.2, -5)
-	layout.CellPadding = UDim2.fromOffset(6, 6)
-	layout.FillDirectionMaxCells = 5
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = grid
+	local layout = grid:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout?
+	if not layout then
+		layout = Instance.new("UIGridLayout")
+		layout.CellSize = UDim2.new(0.2, -5, 0.2, -5)
+		layout.CellPadding = UDim2.fromOffset(6, 6)
+		layout.FillDirectionMaxCells = 5
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Parent = grid
+	end
 	local buttons: { TextButton } = {}
 	local stamps: { TextLabel } = {}
 	local connections: { RBXScriptConnection } = {}
@@ -96,7 +120,11 @@ function Card.new(parent: Instance, intent: (number) -> ())
 	local currentCalled: { [number]: boolean } = {}
 	local cellTemplate = StudioTemplate.Find("Components.CardCell")
 	for index = 1, 25 do
-		local templateButton = if cellTemplate and cellTemplate:IsA("TextButton") then cellTemplate:Clone() else nil
+		local existingButton = if isStudioTemplate then grid:FindFirstChild(`Cell{index}`) else nil
+		local templateButton = if existingButton and existingButton:IsA("TextButton")
+			then existingButton :: TextButton
+			elseif cellTemplate and cellTemplate:IsA("TextButton") then cellTemplate:Clone()
+			else nil
 		local templateScale = templateButton and templateButton:FindFirstChildOfClass("UIScale")
 		local templateFocus = templateButton and templateButton:FindFirstChildOfClass("UIStroke")
 		local templateStamp = templateButton and templateButton:FindFirstChild("Stamp")
@@ -202,18 +230,18 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			local headerY = math.floor(width * 0.2)
 			local gridY = headerY + (if width < 240 then 22 else 34)
 			local bottom = math.floor(width * (if width < 240 then 0.14 else 0.22))
-			headers.Position = UDim2.fromOffset(inset, headerY)
-			headers.Size = UDim2.new(1, -inset * 2, 0, if width < 240 then 20 else 28)
-			grid.Position = UDim2.fromOffset(inset, gridY)
-			grid.Size = UDim2.new(1, -inset * 2, 1, -gridY - bottom)
+			Surface.SetPosition(headers, UDim2.fromOffset(inset, headerY))
+			Surface.SetSize(headers, UDim2.new(1, -inset * 2, 0, if width < 240 then 20 else 28))
+			Surface.SetPosition(grid, UDim2.fromOffset(inset, gridY))
+			Surface.SetSize(grid, UDim2.new(1, -inset * 2, 1, -gridY - bottom))
 		else
-			headers.Position = UDim2.fromOffset(12, 8)
-			headers.Size = UDim2.new(1, -24, 0, 28)
-			grid.Position = UDim2.fromOffset(12, 40)
-			grid.Size = UDim2.new(1, -24, 1, -52)
+			Surface.SetPosition(headers, UDim2.fromOffset(12, 8))
+			Surface.SetSize(headers, UDim2.new(1, -24, 0, 28))
+			Surface.SetPosition(grid, UDim2.fromOffset(12, 40))
+			Surface.SetSize(grid, UDim2.new(1, -24, 1, -52))
 		end
 		for _, label in headerLabels do
-			label.TextSize = if width < 240 then 12 else 18
+			Surface.SetTextSize(label, if width < 240 then 12 else 18)
 			label.TextColor3 = if useArtwork or theme.id == "on_air" then Theme.Ink else Theme.White
 		end
 	end
@@ -289,7 +317,7 @@ function Card.new(parent: Instance, intent: (number) -> ())
 			local free = cell ~= nil and cell.isFree
 			local calledCell = mode ~= "play" or (cell ~= nil and currentCalled[cell.number] == true)
 			button.Text = if free then "★" elseif cell then tostring(cell.number) else "·"
-			button.TextSize = if root.AbsoluteSize.X < 240 then 16 else 22
+			Surface.SetTextSize(button, if root.AbsoluteSize.X < 240 then 16 else 22)
 			button.BackgroundColor3 = if free
 				then Theme.Spotlight
 				elseif marked then Theme.Mark

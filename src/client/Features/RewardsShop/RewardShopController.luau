@@ -372,7 +372,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 	if templateCard then
 		templateCard:Destroy()
 	end
-	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end)
+	local showcaseCard = BingoCard.new(showcase.frame, function(_index: number) end, nil)
 	local sampleCells: { Types.CardCell } = {}
 	for index, number in PREVIEW_NUMBERS do
 		sampleCells[index] = { number = number, isFree = number == 0, isMarked = index == 2 or index == 9 }
@@ -522,10 +522,10 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		balanceUnit.Visible = false
 		Surface.Rect(balanceKicker, 18, 7, half - 24, 18)
 		Surface.Rect(balance, 18, 25, half - 24, 40)
-		balance.TextSize = if portrait then 29 else 35
+		Surface.SetTextSize(balance, if portrait then 29 else 35)
 		Surface.Rect(dailyKicker, half + 6, 7, half - 24, 18)
 		Surface.Rect(daily, half + 6, 26, half - 24, 24)
-		daily.TextSize = if portrait then 13 else 17
+		Surface.SetTextSize(daily, if portrait then 13 else 17)
 		Surface.Rect(dailyNote, half + 6, 50, half - 24, 19)
 		Surface.Rect(demoNote, 18, 67, half - 24, 17)
 		for index, dot in dots do
@@ -538,7 +538,7 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 		local tabWidth = math.floor((w - 32 - 12) / 4)
 		for index, name in { "Fichas", "Cartelas", "Poderes", "Convites" } do
 			Surface.Rect(tabs[name], (index - 1) * (tabWidth + 4), 0, tabWidth, 40)
-			tabs[name].TextSize = if portrait then 11 else 15
+			Surface.SetTextSize(tabs[name], if portrait then 11 else 15)
 		end
 		Surface.Rect(sectionTitle, 20, 211, w - 40, 32)
 		Surface.Rect(sectionCopy, 20, 241, w - 40, 19)
