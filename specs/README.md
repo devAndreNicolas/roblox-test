@@ -14,6 +14,7 @@ Current feature folders:
 - [004-sfx-fantasy-dopamina](004-sfx-fantasy-dopamina/spec.md) — match feedback and Bingo Race implemented in source; solo Studio checks partially recorded, wider validation pending.
 
 - [005-lobby-rewards-monetization](005-lobby-rewards-monetization/spec.md) — source prototype implemented for Fichas, daily rewards, referrals, card themes, shop, and bounded gameplay power. Five card images and nine Robux offers configured for the experimental experience; purchase and multiplayer verification remain open.
+- [006-studio-managed-figma-ui](006-studio-managed-figma-ui/spec.md) — specification for importing the Bingo Noir Figma UI into Studio-authored templates and migrating presentation incrementally while preserving Luau behavior.
 
 Cross-feature product context:
 
@@ -47,6 +48,12 @@ specs/
 |   |-- validation.md
 |   `-- research/
 |-- 005-lobby-rewards-monetization/
+    |-- spec.md
+    |-- plan.md
+    |-- tasks.md
+    |-- validation.md
+    `-- research/
+|-- 006-studio-managed-figma-ui/
     |-- spec.md
     |-- plan.md
     |-- tasks.md

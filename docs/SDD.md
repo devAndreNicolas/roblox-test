@@ -12,5 +12,9 @@ The SDD is organized around one canonical folder per feature and a small project
 - [002: UI, bug fixes, and feature refactor](../specs/002-ui-improvements/spec.md)
 - [002: code audit](../specs/002-ui-improvements/research/code-audit.md)
 - [002: acceptance and regression matrix](../specs/002-ui-improvements/validation.md)
+- [006: Studio-managed Figma UI](../specs/006-studio-managed-figma-ui/spec.md)
+- [006: technical plan](../specs/006-studio-managed-figma-ui/plan.md)
+- [006: implementation and verification tasks](../specs/006-studio-managed-figma-ui/tasks.md)
+- [006: Studio validation matrix](../specs/006-studio-managed-figma-ui/validation.md)
 
 The feature spec is the source of truth for player-visible behavior. The technical plan describes how the current Roblox project implements it. The task list distinguishes implementation from Studio verification. Raw feedback stays in research so interpretation can evolve without losing what players said.
