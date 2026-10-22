@@ -58,9 +58,9 @@ Ao terminar um pacote, registrar data, commit, frame/viewport inspecionado, cami
 - A árvore Client contém um `PlayerGui.BingoGui` ativo e `PlayerGui.BingoGuiDesign` de referência. A captura do viewport mostrou o HUD de lobby, HUD de recompensas e controles de áudio ativos sem uma segunda cópia visível do HUD de referência.
 - Nenhuma interação de compra, estado de partida, tela mobile ou tela de loja foi validada nesta inspeção.
 
-## Primeiro conjunto de controles clonado em runtime — aguardando playtest
+## Primeiro conjunto de componentes clonado em runtime — aguardando playtest
 
-- Alteração: `RewardShopController` clona `BingoGuiDesign > RewardsShop > RewardsHud` e liga `Fichas`, `NextReward` e `OpenShop`; também clona `RewardsShop > UseSuborn`. `ShowAudio` clona `MusicToggle` e `EffectsToggle`. Handlers, estados, conteúdo dinâmico e o construtor anterior como fallback permanecem em Luau.
-- Verificação parcial em Studio Client: confirmou `ScreenGui`, classes dos nós obrigatórios e sucesso de `Clone()` para HUD, Suborno e toggles. Os clones de verificação foram destruídos sem serem parentados ao jogo.
+- Alteração: `LobbyView` clona `BingoGuiDesign > Content > LobbyView` e liga labels/status/retry; `RewardShopController` clona `RewardsShop > RewardsHud` e liga `Fichas`, `NextReward` e `OpenShop`, e também clona `RewardsShop > UseSuborn`. `ShowAudio` clona `MusicToggle` e `EffectsToggle`. Handlers, estados, conteúdo dinâmico e construtores anteriores como fallback permanecem em Luau.
+- Verificação parcial em Studio Client: confirmou as classes de todos os nós obrigatórios de `LobbyView`, HUD, Suborno e toggles e que os respectivos modelos aceitam `Clone()`. Os clones de verificação foram destruídos sem serem parentados ao jogo.
 - Estado de validação: não aprovado ainda. O Studio já conectado está em Play mode e não foi reiniciado após esta alteração. Lint/build também não puderam ser executados porque os executáveis locais `selene`, `stylua` e `rojo` falham ao iniciar com erro de caminho do Windows.
-- Próximo check: reiniciar Play pelo Rojo; conferir HUD desktop/mobile, saldo/marco, abrir a loja, áudio On/Off, Suborno habilitado/desabilitado e ausência de duplicação; desligar o template para confirmar os fallbacks.
+- Próximo check: reiniciar Play pelo Rojo; conferir Lobby/status da fila/retry, HUD desktop/mobile, saldo/marco, abrir a loja, áudio On/Off, Suborno habilitado/desabilitado e ausência de duplicação; desligar o template para confirmar os fallbacks.

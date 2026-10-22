@@ -37,6 +37,8 @@
   - [x] Clonar `RewardsShop > UseSuborn` do template, preservando as validações e a ação existentes.
   - [ ] Validar o corte em Studio desktop/mobile antes de marcar a fatia como migrada.
 - [ ] Migrar LobbyView preservando estado de fila e retry.
+  - [x] Clonar `Content > LobbyView` do template e bindar textos/status/retry; manter o construtor anterior como fallback.
+  - [ ] Validar estados de fila, retry e responsividade em playtest.
 - [ ] Migrar IntroView preservando falas, skip e preview da cartela.
 - [ ] Migrar MatchView preservando chamadas, marcações, race, history, Suborno e pause.
 - [ ] Migrar ResultsView preservando win/loss/draw, detalhes e skip.
