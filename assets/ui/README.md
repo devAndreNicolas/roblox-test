@@ -14,6 +14,16 @@ The shared audio controls use Studio-authored icon, label and state children. Lu
 
 ## Edit a screen interface
 
+### Spec 007: lobby and shop
+
+The lobby HUD is now split into `RewardsShop > TicketBalance`, `MilestoneProgress`, and `OpenShopButton`. Move each root with the Studio move tool or change its `Position` and `Size` in Properties. `Content > LobbyView > LobbyStatus` is the compact queue panel. It moves below the HUD on a narrow viewport; moving its `Position` in Studio takes precedence over that responsive default.
+
+The open shop is `RewardsShop > ShopPanel`. Turn its `Visible` property on while editing, then turn it off before export. Its `UISizeConstraint` caps the modal at 800 × 560; the same root fills the safe phone area. Edit `Header`, `Rail`, `Categories`, `Catalog`, and `Notice` in Explorer. Offer rows and card artwork live under `Catalog`. The old `RewardsHud` stays in the model as a hidden fallback; the client shows the three new components when the spec 007 template is complete.
+
+The 007 shop controller no longer writes layout coordinates, text sizes, fonts, or images onto this template when it opens. It still fills live balances, prices, rewards, ownership, purchase states, and click actions. Tabs and catalog rows use native layout: move the `Catalog` root freely; change `LayoutOrder` to reorder rows. Dragging a row inside a `UIListLayout` will not set its final vertical position. To change a row's composition, move its own image, labels, and buttons inside that row.
+
+Use the six colors in [`specs/007-gui-refactor-first-part/design.md`](../../specs/007-gui-refactor-first-part/design.md) for new shop and lobby chrome. Card theme artwork retains its own colors. All player-facing labels in this template are in English. Export the complete `BingoGuiDesign` root after editing; Rojo does not save Studio changes to this file.
+
 1. In Explorer, open `StarterGui > BingoGuiDesign`. Temporarily set `Enabled = true` to preview in Studio edit mode. Hide views you are not editing with their `Visible` property. Restore `Enabled = false` before export.
 2. Edit the actual instances in Studio: positions, sizes, fonts, text sizes, backgrounds, images, corners, strokes, gradients, padding, constraints and decoration. Add a `UISizeConstraint` or `UIAspectRatioConstraint` when you need it. Use scale-based `UDim2` values for responsive sizing. Check both phone and desktop in Studio's Device Emulator.
 3. For card art, change the `ThemeArtwork.Image` under `RewardsShop > ShopPanel > Catalog > <theme id> > Preview`. The same image is used on the card in the match. The `Preview` and `Paper` background colors supply the theme's accent and paper. Edit `Content > MatchView > BingoCard` for the classic card.
