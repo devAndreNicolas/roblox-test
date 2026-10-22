@@ -746,6 +746,11 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			then "EQUIPPED FOR YOUR NEXT MATCH"
 			elseif ready and reward.ownedThemes[selectedThemeId] then "IN YOUR COLLECTION · TAP EQUIP"
 			else "CHOOSE THIS CARD FOR THE STAGE"
+		if studioV2 and selectedTheme and not showcaseOwned then
+			showcaseStatus.Text = if selectedTheme.fichas < 0 then "ROBUX EXCLUSIVE"
+				elseif ready and fichas < selectedTheme.fichas then `NEED {selectedTheme.fichas - fichas} MORE TICKETS`
+				else "READY TO BUY"
+		end
 		hudBalance.Text = if ready then `{fichas} TICKETS` else "LOADING"
 		hudDaily.Text = if ready
 			then `MILESTONE {reward.dailyIndex + 1}/7 · +{Catalog.DAILY_FICHAS[reward.dailyIndex + 1]}`
@@ -840,6 +845,10 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 			local selected = name == selectedTab
 			tab.BackgroundColor3 = if selected then Theme.Spotlight else Theme.Stage
 			tab.TextColor3 = if selected then (if studioV2 then Theme.Midnight else Theme.Ink) else Theme.Paper
+			if studioV2 then
+				local stroke = tab:FindFirstChildOfClass("UIStroke")
+				if stroke then stroke.Thickness = if selected then 3 else 1 end
+			end
 		end
 		for _, row in entries do
 			row.frame.Visible = row.tab == selectedTab
@@ -883,6 +892,9 @@ function Controller.new(gui: ScreenGui, onTheme: (string) -> ())
 				then "In your collection"
 				elseif theme.fichas < 0 then "Robux exclusive · permanent"
 				else "Earn by playing or buy now"
+			if studioV2 and not owned and theme.fichas >= 0 and ready and fichas < theme.fichas then
+				row.detail.Text = `Need {theme.fichas - fichas} more Tickets`
+			end
 		end
 		powerRow.stock.Text = `IN STOCK: {if ready then reward.suborns else 0}`
 		powerRow.fichas.Active = ready and fichas >= Catalog.SUBORN_FICHAS
